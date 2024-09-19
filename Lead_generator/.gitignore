@@ -12,3 +12,6 @@ __pycache__/
 data/raw/
 data/processed/
 fine_tuned_bert/
+
+.env
+config/settings.py
