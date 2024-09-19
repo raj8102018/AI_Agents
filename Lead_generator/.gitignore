@@ -9,8 +9,7 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Data files
-data/raw/
-data/processed/
+
 fine_tuned_bert/
 
 .env
