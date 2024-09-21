@@ -5,6 +5,12 @@ import os
 from transformers import BertTokenizer, TFBertForSequenceClassification, AdamWeightDecay
 from data_preprocessing import get_datasets  # Import the datasets
 
+import tensorflow as tf
+
+# Suppress most messages:
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
+
 def train_and_save_model():
     # Load datasets from data_preprocessing.py
     train_dataset, val_dataset = get_datasets()

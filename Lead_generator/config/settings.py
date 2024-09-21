@@ -12,3 +12,4 @@ MONGODB_DB = 'lead_classifier_data'
 
 # API Keys (if needed)
 # LINKEDIN_API_KEY = os.getenv('LINKEDIN_API_KEY', 'your_default_api_key')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY','')
