@@ -92,7 +92,9 @@ batches = get_batches(lead_info)
 print("testing the response_generation by passing the leads to the api \n")
 processed_batches = batch_processing(batches)
 print("updating the batches to the database\n")
-update_leads(processed_batches)
+merged_list = [item for sublist in processed_batches for item in sublist]
+#Update the leads to the database
+update_leads(merged_list)
 print("giving the user time to check for the update in the database\n")
 time.sleep(60)
 print("deleting the dummy leads from the database\n")
