@@ -5,8 +5,6 @@ import os
 from transformers import BertTokenizer, TFBertForSequenceClassification, AdamWeightDecay
 from data_preprocessing import get_datasets  # Import the datasets
 
-import tensorflow as tf
-
 # Suppress most messages:
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
