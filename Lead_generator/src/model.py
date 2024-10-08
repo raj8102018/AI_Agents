@@ -34,8 +34,8 @@ def train_and_save_model():
     print(f'Validation Accuracy: {accuracy}')
 
     # Save the model and tokenizer
-    model.save_pretrained('fine_tuned_bert')
     tokenizer.save_pretrained('fine_tuned_bert')
+    model.save_pretrained('fine_tuned_bert')
 
     # Create metrics directory if it does not exist
     metrics_dir = os.getenv('METRICS_DIR', 'metrics')  # Use environment variable or default to 'metrics'
