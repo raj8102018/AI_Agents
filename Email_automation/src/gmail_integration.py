@@ -35,10 +35,10 @@ def gmail_send_message(service):
     """Create and send an email message and print the returned message ID."""
     try:
         message = EmailMessage()
-        message.set_content("make a mental click!!!!!!!!")
+        message.set_content("Batch Apex Syntax")
         message["To"] = "mrohithg@gmail.com"
         message["From"] = "yuvraj07102024@gmail.com"
-        message["Subject"] = "Sent from EMAIL AUTOMATION AGENT"
+        message["Subject"] = "Sent from EMAIL AUTOMATION AGENT second thread"
 
         # Encode the message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
@@ -50,9 +50,34 @@ def gmail_send_message(service):
     except HttpError as error:
         print(f"An error occurred: {error}")
 
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+def gmail_reply_message(service):
+    """Create and send an email message and print the returned message ID."""
+    try:
+        message = EmailMessage()
+        message.set_content("deleting sdbjhasdsabdjhsabdjhsabhjdvasghdca")
+        message["To"] = "mrohithg@gmail.com"  # Recipient's email
+        message["From"] = "yuvraj07102024@gmail.com"  # Your email
+        message["Subject"] = "Re: reply Sent from EMAIL AUTOMATION AGENT second thread"  # Use 'Re:' for replies
+    
+        # Set the In-Reply-To header
+        message["In-Reply-To"] = '<CAB-HA9Y_+=CCxuVfmH5tUtd=4FwEh=dAKqf8AGisqQLOG61TVA@mail.gmail.com>'
+        
+        # Optional: Set References header (may help with threading)
+        message["References"] = message["In-Reply-To"]
+
+        # Encode the message
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+        create_message = {
+            "raw": encoded_message,
+            "threadId": '1926c3adfb6090e3'  # Thread ID
+        }
+
+        # Send the email
+        send_message = service.users().messages().send(userId="me", body=create_message).execute()
+        print(f'Message Id: {send_message["id"]}')
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+
 
 
 def show_chatty_threads():
@@ -163,7 +188,8 @@ def categorize_email(email_data):
 
 if __name__ == "__main__":
     service = authenticate_gmail_api()  # Authenticate and get the service
-    gmail_send_message(service)  # Send the email
+    #gmail_send_message(service)  # Send the email
+    gmail_reply_message(service)
     #print(process_email_data())
 
 
