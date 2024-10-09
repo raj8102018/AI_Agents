@@ -33,11 +33,6 @@ def authenticate_gmail_api():
             token.write(creds.to_json())
     return build("gmail", "v1", credentials=creds)
 
-def format_email_content(content):
-    """Replace literal '\n' with actual newline characters."""
-    # Replace the escape sequence '\n' with an actual newline
-    formatted_content = content.replace("\\n", "\n").replace("\n", "\n")
-    return formatted_content
 
 def gmail_send_message(sender,recepient,subject,content):
     """Create and send an email message and print the returned message ID."""
@@ -142,24 +137,43 @@ def show_chatty_threads():
         print(f"An error occurred: {error}")
 
 def process_email_data():
-
     extracted_info = []
-
+    
+    # Fetch unread emails
     emails = show_chatty_threads()[0]
 
+    # Prepare a dictionary to hold messages by thread ID
+    threads_dict = {}
+
     for email in emails:
+        thread_id = email.get("threadId")
+        
+        # If the thread ID is not already in the dictionary, initialize it
+        if thread_id not in threads_dict:
+            threads_dict[thread_id] = []
+
+        conversation = []
+        parts = email.get("payload").get("parts")
+        for part in parts:
+            s = part.get("body").get("data")
+            decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
+            if(part.get("mimeType")=="text/plain"):
+                msg = decoded_msg.decode('utf-8')
+                conversation.append(msg)
         # Extract email information
         email_data = {
             "id": email.get("id"),
-            "threadId": email.get("threadId"),
+            "threadId": thread_id,
             "labelIds": email.get("labelIds", []),
             "snippet": email.get("snippet"),
+            "conversation": conversation,
             "from": None,
             "subject": None,
             "date": None,
             "message_id": None,
             "in_reply_to": None,
-            "references": None
+            "references": None,
+            # "messages": threads_dict[thread_id]  # Store messages for this thread
         }
 
         # Extract headers from the payload
@@ -178,45 +192,45 @@ def process_email_data():
                 elif header["name"].lower() == "references":
                     email_data["references"] = header["value"]
 
-        # Classify the action based on email's labels and snippet content
-        action = categorize_email(email_data)
-        email_data["action"] = action
+        # Add the current email data to the list of messages in the thread
+        threads_dict[thread_id] = email_data
 
-        extracted_info.append(email_data)
+    # Convert the threads dictionary to a list of extracted info
+    for thread_id, messages in threads_dict.items():
+        extracted_info.append(messages)
 
     return extracted_info
 
-def categorize_email(email_data):
-    # Categorize emails based on certain conditions (can be modified)
-    if "INBOX" in email_data["labelIds"]:
-        if "UNREAD" in email_data["labelIds"]:
-            if re.search(r"(urgent|asap|important)", email_data["snippet"], re.I):
-                return "fetch_response"
-            elif re.search(r"(follow up|reminder)", email_data["snippet"], re.I):
-                return "write_followup"
-        else:
-            if email_data["from"]:
-                return "categorize"
-    return "no_action"
+# def categorize_email(email_data):
+#     # Categorize emails based on certain conditions (can be modified)
+#     if "INBOX" in email_data["labelIds"]:
+#         if "UNREAD" in email_data["labelIds"]:
+#             if re.search(r"(urgent|asap|important)", email_data["snippet"], re.I):
+#                 return "fetch_response"
+#             elif re.search(r"(follow up|reminder)", email_data["snippet"], re.I):
+#                 return "write_followup"
+#         else:
+#             if email_data["from"]:
+#                 return "categorize"
+#     return "no_action"
 
 def extract_req_details():
     # gmail_reply_message(service,sender,recepient,subject,content,message_id='<CAHF40Kjn0ADUbno-u6RdVkWyXRDbazniKMOGQZa=QnmEttuyRw@mail.gmail.com>',thread_id='1926f87dba7e4f0e'):
     array_to_parse = process_email_data()
 
     email_regex = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
-    message_regex = r"wrote:\s*(.*)"
     mail_batch = []
     counter = 0
     for thread_dict in array_to_parse:
+        # for message in thread_dict['messages']:
         imp_keys_dict = {}
         imp_keys_dict['threadId'] = thread_dict['threadId']
-        imp_keys_dict['latest_message'] = re.search(message_regex, thread_dict['snippet']).group(1)
         imp_keys_dict['master_email'] = re.search(email_regex, thread_dict['snippet']).group()
         imp_keys_dict['recepient'] = thread_dict['from']
         imp_keys_dict['labels'] = thread_dict['labelIds']
         imp_keys_dict['subject'] = thread_dict['subject']
-        imp_keys_dict['action'] = thread_dict['action']
         imp_keys_dict['message_id'] = thread_dict['message_id']
+        imp_keys_dict['conversation'] = thread_dict['conversation']
         imp_keys_dict['entry_no'] = counter + 1
         counter = counter + 1
         mail_batch.append(imp_keys_dict)
@@ -247,8 +261,33 @@ def batch_reply():
     
     print("successfully sent")
 
-if __name__ == "__main__":
-    
-    batch_mail_initiation()
+import json
 
-    
+if __name__ == "__main__":
+#    f = open("demofile3.txt", "w")
+#    f.write(str(process_email_data()))
+#    f.close()
+    # emails = show_chatty_threads()[0]
+
+    # # Prepare a dictionary to hold messages by thread ID
+    # threads_dict = {}
+
+    # for email in emails:
+    #     thread_id = email.get("threadId")
+    #     print(thread_id)
+    #     parts = email.get("payload").get("parts")
+    #     for part in parts:
+    #         print(part.get("body").get("size"))
+    #         print(part.get("mimeType"))
+    #         s = part.get("body").get("data")
+    #         decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
+    #         if(part.get("mimeType")=="text/plain"):
+    #             print(decoded_msg.decode('utf-8'))
+
+    #         # $base64String = $response->json()['payload']['parts'][1]['body']['data'] ?? '';
+    #         # $base64String = strtr($base64String, '-_', '+/');
+
+    #         # $decoded = base64_decode($base64String);
+    #         # encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    # print(process_email_data())
+     print(extract_req_details())
