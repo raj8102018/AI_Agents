@@ -1,6 +1,6 @@
 # Virtual environment
+email_env/
 my_env/
-
 # Byte-compiled files
 *.pyc
 __pycache__/
