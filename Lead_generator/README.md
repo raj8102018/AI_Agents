@@ -50,3 +50,12 @@ To activate the environment use the command below
 │   └── settings.py                  # Configuration for API keys, MongoDB settings, etc.
 │
 └── my_env/ -->
+
+
+# Errors and resolution when you pip install
+nlp         = spacy.load('en_core_web_sm')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              cannot find module
+
+Resolution  = python -m spacy download en || python -m spacy download en_core_web_sm
+
