@@ -3,8 +3,7 @@ from pymongo import MongoClient
 from pymongo import UpdateOne
 import sys
 import os
-import random
-import time
+import re
 from bson.objectid import ObjectId
 
 
@@ -18,28 +17,45 @@ def connect_to_mongodb():
     client = MongoClient(MONGODB_URI)
     
     # Access the specific database
-    #db = client[MONGODB_DB]
+    db = client[MONGODB_DB]
     
     # Access the 'leads' collection
-    #leads_collection = db['leads']
+    leads_collection = db['test_emails']
     
-    #return leads_collection
-    return "connect successful"
+    return leads_collection
+    #return "connect successful"
 
 def fetch_leads():
-    leads_collection = connect_to_mongodb()
-    leads = leads_collection.find({
-        'lead_type': {'$exists': False},   # Documents without 'lead_type'
-        'outbound message': {'$exists': False}  # Documents without 'outbound message'
-    })
-    leads_list = list(leads)
-    return leads_list
+    try:
+        leads_collection = connect_to_mongodb()
+        # Fetch documents where 'initial_contact' is 'No'
+        leads = leads_collection.find({
+            'Initial contact': {'$eq': 'No'},
+        })
+        leads_list = list(leads)  # Caution: consider cursor iteration if too many leads
+        return leads_list
+    except Exception as e:
+        print(f"Error fetching leads: {e}")
+        return []
+
+def leads_for_initial_contact():
+    leads_list = fetch_leads()
+    subject_regex = r"(?<=Subject:\s)(.*?)(?=\\n\\n)"
+    messagebody_regex = r"(?<=\\n\\n)(.*)"
+    mail_batch_initial = []
+    for entry in leads_list:
+        lead_details = {}
+        lead_details['recepient'] = entry['Email']
+        lead_details['subject'] = re.search(subject_regex, entry['outbound message']).group()
+        lead_details['content'] = re.search(messagebody_regex, entry['outbound message']).group()
+        mail_batch_initial.append(lead_details)
+    return mail_batch_initial
 
 def update_leads(batch):
     leads_collection = connect_to_mongodb()
 
     # Create a list to hold update operations
-    operations = []
+    operations = [] 
 
     # Prepare the update operations for each lead
     for lead in batch:
@@ -85,7 +101,9 @@ def delete_leads(lead_id_list):
     else:
         print("No leads found with the specified IDs.")
 
-
-print(connect_to_mongodb())
-
+if __name__ == "__main__":
+    
+    output = leads_for_initial_contact()
+    for i in output:
+        print(i,'\n')
 

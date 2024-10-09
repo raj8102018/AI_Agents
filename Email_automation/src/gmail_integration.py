@@ -7,7 +7,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import re
+import time
+import textwrap
 
+from mongodb_integration import leads_for_initial_contact
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"]
 #SCOPES = ["https://mail.google.com/"]
@@ -30,11 +33,18 @@ def authenticate_gmail_api():
             token.write(creds.to_json())
     return build("gmail", "v1", credentials=creds)
 
+def format_email_content(content):
+    """Replace literal '\n' with actual newline characters."""
+    # Replace the escape sequence '\n' with an actual newline
+    formatted_content = content.replace("\\n", "\n").replace("\n", "\n")
+    return formatted_content
+
 def gmail_send_message(sender,recepient,subject,content):
     """Create and send an email message and print the returned message ID."""
     try:
         service = authenticate_gmail_api()
         message = EmailMessage()
+        content = content.replace("\\n", "\n").replace("\n", "\n")
         message.set_content(content)
         message["To"] = recepient
         message["From"] = sender
@@ -57,7 +67,7 @@ def gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
         thread_id = thread_id
         service = service = authenticate_gmail_api()
         message = EmailMessage()
-        message.set_content(content)
+        message.set_content(content).replace("\\n", "\n").replace("\n", "\n")
         message["To"] = recepient  # Recipient's email
         message["From"] = sender  # Your email
         message["Subject"] = f"Re: {subject}"  # Use 'Re:' for replies
@@ -213,22 +223,32 @@ def extract_req_details():
 
     return mail_batch
 
-def batch_mail_initiation():
+def batch_mail_initiation(batch_size=1):
+    authenticate_gmail_api()
+    leads_to_contact = leads_for_initial_contact()
+    sender = 'yuvraj07102024@gmail.com'
     
+    for i in range(0,len(leads_to_contact),batch_size):
+        batch = leads_to_contact[i:i+batch_size]
+    # gmail_send_message(sender,recepient,subject,content):
+        for entry in batch:
+            gmail_send_message(sender,entry['recepient'],entry['subject'],entry['content'])
+            print('sent...'+str(len(batch)))
+        time.sleep(5)
+    print('successfully sent')
 
 def batch_reply():
     
     mail_batch = extract_req_details()
-    response = 
+    response = ""
     for entry in mail_batch:
     # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
         gmail_reply_message(entry['master_email'],entry['recepient'],entry['subject'],response,entry['message_id'],entry['threadId'])
     
-    print("success")
+    print("successfully sent")
 
 if __name__ == "__main__":
-    batch_reply()
-
-
+    
+    batch_mail_initiation()
 
     
