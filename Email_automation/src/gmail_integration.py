@@ -12,7 +12,6 @@ import re
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"]
 #SCOPES = ["https://mail.google.com/"]
 
-
 def authenticate_gmail_api():
     """Authenticate and return the Gmail API service."""
     creds = None
@@ -31,14 +30,15 @@ def authenticate_gmail_api():
             token.write(creds.to_json())
     return build("gmail", "v1", credentials=creds)
 
-def gmail_send_message(service):
+def gmail_send_message(sender,recepient,subject,content):
     """Create and send an email message and print the returned message ID."""
     try:
+        service = authenticate_gmail_api()
         message = EmailMessage()
-        message.set_content("Batch Apex Syntax")
-        message["To"] = "mrohithg@gmail.com"
-        message["From"] = "yuvraj07102024@gmail.com"
-        message["Subject"] = "Sent from EMAIL AUTOMATION AGENT second thread"
+        message.set_content(content)
+        message["To"] = recepient
+        message["From"] = sender
+        message["Subject"] = subject
 
         # Encode the message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
@@ -50,17 +50,20 @@ def gmail_send_message(service):
     except HttpError as error:
         print(f"An error occurred: {error}")
 
-def gmail_reply_message(service):
+def gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
     """Create and send an email message and print the returned message ID."""
     try:
+        message_id = message_id
+        thread_id = thread_id
+        service = service = authenticate_gmail_api()
         message = EmailMessage()
-        message.set_content("deleting sdbjhasdsabdjhsabdjhsabhjdvasghdca")
-        message["To"] = "mrohithg@gmail.com"  # Recipient's email
-        message["From"] = "yuvraj07102024@gmail.com"  # Your email
-        message["Subject"] = "Re: reply Sent from EMAIL AUTOMATION AGENT second thread"  # Use 'Re:' for replies
+        message.set_content(content)
+        message["To"] = recepient  # Recipient's email
+        message["From"] = sender  # Your email
+        message["Subject"] = f"Re: {subject}"  # Use 'Re:' for replies
     
         # Set the In-Reply-To header
-        message["In-Reply-To"] = '<CAB-HA9Y_+=CCxuVfmH5tUtd=4FwEh=dAKqf8AGisqQLOG61TVA@mail.gmail.com>'
+        message["In-Reply-To"] = message_id
         
         # Optional: Set References header (may help with threading)
         message["References"] = message["In-Reply-To"]
@@ -69,7 +72,7 @@ def gmail_reply_message(service):
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
         create_message = {
             "raw": encoded_message,
-            "threadId": '1926c3adfb6090e3'  # Thread ID
+            "threadId": thread_id  # Thread ID
         }
 
         # Send the email
@@ -87,9 +90,10 @@ def show_chatty_threads():
     Returns: tuple (list of unread_mails, list of chatty_threads)
     """
     try:
-        # Authenticate and get the service
-        service = build("gmail", "v1", credentials=Credentials.from_authorized_user_file("token.json", SCOPES))
-        
+        # Authenticate and get the service this way to avoid using it as a parameter
+        #service = build("gmail", "v1", credentials=Credentials.from_authorized_user_file("token.json", SCOPES))
+        service = authenticate_gmail_api()
+       
         # Fetch list of messages in the inbox
         results = service.users().messages().list(userId='me', labelIds=['INBOX'], maxResults=1000).execute()
         messages = results.get('messages', [])
@@ -185,12 +189,45 @@ def categorize_email(email_data):
                 return "categorize"
     return "no_action"
 
+def extract_req_details():
+    # gmail_reply_message(service,sender,recepient,subject,content,message_id='<CAHF40Kjn0ADUbno-u6RdVkWyXRDbazniKMOGQZa=QnmEttuyRw@mail.gmail.com>',thread_id='1926f87dba7e4f0e'):
+    array_to_parse = process_email_data()
+
+    email_regex = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+    message_regex = r"wrote:\s*(.*)"
+    mail_batch = []
+    counter = 0
+    for thread_dict in array_to_parse:
+        imp_keys_dict = {}
+        imp_keys_dict['threadId'] = thread_dict['threadId']
+        imp_keys_dict['latest_message'] = re.search(message_regex, thread_dict['snippet']).group(1)
+        imp_keys_dict['master_email'] = re.search(email_regex, thread_dict['snippet']).group()
+        imp_keys_dict['recepient'] = thread_dict['from']
+        imp_keys_dict['labels'] = thread_dict['labelIds']
+        imp_keys_dict['subject'] = thread_dict['subject']
+        imp_keys_dict['action'] = thread_dict['action']
+        imp_keys_dict['message_id'] = thread_dict['message_id']
+        imp_keys_dict['entry_no'] = counter + 1
+        counter = counter + 1
+        mail_batch.append(imp_keys_dict)
+
+    return mail_batch
+
+def batch_mail_initiation():
+    
+
+def batch_reply():
+    
+    mail_batch = extract_req_details()
+    response = 
+    for entry in mail_batch:
+    # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
+        gmail_reply_message(entry['master_email'],entry['recepient'],entry['subject'],response,entry['message_id'],entry['threadId'])
+    
+    print("success")
 
 if __name__ == "__main__":
-    service = authenticate_gmail_api()  # Authenticate and get the service
-    #gmail_send_message(service)  # Send the email
-    gmail_reply_message(service)
-    #print(process_email_data())
+    batch_reply()
 
 
 
