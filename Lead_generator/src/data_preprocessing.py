@@ -155,12 +155,11 @@ def get_datasets():
 
     batch_size      = 16
     train_dataset   = train_dataset.shuffle(100).batch(batch_size)
-    val_dataset     = val_dataset.batch(batch_size)
+    val_dataset     = val_dataset.batch(batch_size) 
 
     return train_dataset, val_dataset
 
 if __name__ == "__main__":
-    
     
     # Preprocess data before feeding the data to the model
     preprocess_data(input_path, output_path)

@@ -21,7 +21,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 
 To activate the environment use the command below
 
-.\my_env\Scripts\Activate.ps1
+.\email_env\Scripts\Activate.ps1
 
 <!-- email_automation/
 │

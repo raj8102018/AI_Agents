@@ -5,29 +5,10 @@ from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestExce
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), 'src')))
 
-#import extract_req_details
-from gmail_integration import extract_req_details
-
 # Load environment variables from .env file
 load_dotenv()
 
-prompt = "write few quotes each from ayn rands fountainhead and a man called ove by fredrick backman"
-# mail_batch = []
-# imp_keys_dict = {}
-#         imp_keys_dict['threadId'] = thread_dict['threadId']
-#         imp_keys_dict['master_email'] = re.search(email_regex, thread_dict['snippet']).group()
-#         imp_keys_dict['recepient'] = thread_dict['from']
-#         imp_keys_dict['labels'] = thread_dict['labelIds']
-#         imp_keys_dict['subject'] = thread_dict['subject']
-#         imp_keys_dict['message_id'] = thread_dict['message_id']
-#         imp_keys_dict['conversation'] = thread_dict['conversation']
-#         imp_keys_dict['entry_no'] = counter + 1
-# gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
-
-req_details = extract_req_details()
-
-response_parameters = [{'subject' : entry['subject'], 'conversation':entry['conversation']} for entry in extract_req_details()]
-
+#function for generating batches to feed LLM
 def get_batches(data, batch_size=1):
 	batches = []
 	list_length = len(data)
@@ -40,7 +21,30 @@ def get_batches(data, batch_size=1):
 
 	return batches
 
+#function to format the batches into text for to reduce complexity of the input to LLM
+def process_email_batch_optimized(batch):
+    result = []
+    
+    for idx, email in enumerate(batch, 1):
+        subject = email.get('subject', 'No Subject')
+        
+        # Join the entire conversation for each email at once
+        conversation_text = "\n".join(email.get('conversation', []))
+        
+        # Create the formatted email thread text
+        formatted_email = f"Email {idx}:\nSubject: {subject}\nConversation:\n{conversation_text}\n"
+        
+        result.append(formatted_email)
+    
+    return "\n".join(result)
+
+#function to generate response from the LLM
 def generate_response(batch):
+    formatted_batch = process_email_batch_optimized(batch)
+    prompt = (f"you are given {len(batch)} email conversation threads, between the client and business sales executive"
+              f"the formatted data is as follows: {formatted_batch}"
+              f"go through the subject to understand the context and conversation to write a followup email body without subject for each and every conversation"    
+    )
     try:
         # Configure the API key
         genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
@@ -52,7 +56,7 @@ def generate_response(batch):
         response = model.generate_content(prompt)
 
         # Print the generated content
-        print(response.text)
+        return response.text
 
     except HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")
@@ -67,5 +71,4 @@ def generate_response(batch):
 
 
 if __name__ == "__main__":
-    batches = get_batches(response_parameters)
-    print(batches)
+    pass

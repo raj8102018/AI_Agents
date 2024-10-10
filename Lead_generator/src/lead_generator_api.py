@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from lead_classification import classify_lead
+from model import predict_lead
 import numpy as np
 import os
 
@@ -17,8 +17,8 @@ def leads_api():
         return jsonify({"error": "Missing required parameters: 'title' or 'industry'"}), 400
 
     # Call your lead classification function
-    # lead_type = "very hot"
-    lead_type = classify_lead(title, industry)
+    lead_type = "very hot"
+    lead_type = predict_lead(title, industry)
 
     # Return the result as a JSON response
     return jsonify({
@@ -28,5 +28,5 @@ def leads_api():
     })
 
 if __name__ == '__main__':
-    # print(classify_lead("President", "Retail"))
+    print(predict_lead("President", "Retail"))
     app.run(debug=True)
