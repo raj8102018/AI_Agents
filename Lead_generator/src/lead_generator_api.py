@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from model import predict_lead
 import numpy as np
 import os
 
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/leads_api', methods=['GET'])
 def leads_api():
@@ -17,7 +19,7 @@ def leads_api():
         return jsonify({"error": "Missing required parameters: 'title' or 'industry'"}), 400
 
     # Call your lead classification function
-    lead_type = "very hot"
+    #lead_type = "very hot"
     lead_type = predict_lead(title, industry)
 
     # Return the result as a JSON response
