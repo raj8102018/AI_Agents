@@ -197,7 +197,10 @@ def process_email_data():
                     email_data["references"] = header["value"]
 
         # Add the current email data to the list of messages in the thread
-        threads_dict[thread_id] = email_data
+        if thread_id in threads_dict:
+            threads_dict[thread_id].append(email_data)
+        else:
+            threadss_dict[thread_id] = [email_data]
 
     # Convert the threads dictionary to a list of extracted info
     for thread_id, messages in threads_dict.items():
@@ -295,30 +298,77 @@ def generate_batch_response_for_bulk_reply(response_parameters):
     print("done")
     return buffer
 
+def show_chatty_threads_2():
+    """Display threads with long conversations(>= 3 messages)
+    Return: None
+
+    Load pre-authorized user credentials from the environment.
+    TODO(developer) - See https://developers.google.com/identity
+    for guides on implementing OAuth2 for the application.
+    """
+    # creds, _ = google.auth.default()
+
+    try:
+        # create gmail api client
+        service = authenticate_gmail_api()
+
+        # pylint: disable=maybe-no-member
+        # pylint: disable:R1710
+        threads = (
+            service.users().threads().list(userId="me").execute().get("threads", [])
+        )
+        for thread in threads:
+            tdata = (
+                service.users().threads().get(userId="me", id=thread["id"]).execute()
+            )
+            nmsgs = len(tdata["messages"])
+
+            # skip if <3 msgs in thread
+            if nmsgs > 3:
+                msg = tdata["messages"][0]["payload"]
+                subject = ""
+                for header in msg["headers"]:
+                    if header["name"] == "Subject":
+                        subject = header["value"]
+                        thread["convo"] = msg
+                        break
+                if subject:  # skip if no Subject line
+                    print(f"- {subject}, {nmsgs}")
+        return threads
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+
+
 if __name__ == "__main__":
+    print(show_chatty_threads_2())
 #    f = open("demofile3.txt", "w")
 #    f.write(str(process_email_data()))
 #    f.close()
-    emails = show_chatty_threads()[1]
+    # emails = show_chatty_threads()[1]
 
     # Prepare a dictionary to hold messages by thread ID
-    threads_dict = {}
+    # threads_dict = {}
 
-    for email in emails:
-        thread_id = email.get("threadId")
+    # for email in emails:
+    #     thread_id = email.get("threadId")
         
-        # If the thread ID is not already in the dictionary, initialize it
-        if thread_id not in threads_dict:
-            threads_dict[thread_id] = []
+    #     # If the thread ID is not already in the dictionary, initialize it
+    #     if thread_id not in threads_dict:
+    #         threads_dict[thread_id] = []
 
-        conversation = []
-        parts = email.get("messages").get("parts")
-        for part in parts:
-            s = part.get("body").get("data")
-            decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
-            if(part.get("mimeType")=="text/plain"):
-                msg = decoded_msg.decode('utf-8')
-                conversation.append(msg)
-        print(conversation)
-        print(len(conversation))
-    print(show_chatty_threads()[1])
+    #     conversation = []
+    #     parts = email.get("messages").get("parts")
+    #     for part in parts:
+    #         s = part.get("body").get("data")
+    #         decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
+    #         if(part.get("mimeType")=="text/plain"):
+    #             msg = decoded_msg.decode('utf-8')
+    #             conversation.append(msg)
+    #     print(conversation)
+    #     print(len(conversation))
+    # for thread in process_email_data():
+    #     for message in thread:
+    #         print(message['conversation'][0])
+    #         print('---------------------------------')
+    #     print('========================================')
