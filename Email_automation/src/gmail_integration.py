@@ -162,6 +162,7 @@ def process_email_data():
         for part in parts:
             s = part.get("body").get("data")
             decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
+            # msg = decoded_msg.decode('utf-8')
             if(part.get("mimeType")=="text/plain"):
                 msg = decoded_msg.decode('utf-8')
                 conversation.append(msg)
@@ -206,6 +207,11 @@ def process_email_data():
     for thread_id, messages in threads_dict.items():
         extracted_info.append(messages)
 
+
+    # email_threads = show_chatty_threads_2()
+    # for email_thread in email_threads:
+    
+    
     return extracted_info
 
 # def categorize_email(email_data):
@@ -243,6 +249,7 @@ def extract_req_details():
         counter = counter + 1
         mail_batch.append(imp_keys_dict)
 
+    
     return mail_batch
 
 #to initiate converstation in batch using initially composed customized outbound message stored in MongoDB
@@ -275,7 +282,8 @@ def extract_emails_regex(content):
 #to respond to unread mails in the thread after generating responses from LLM
 def batch_reply():
 
-    req_details = extract_req_details()
+    # req_details = extract_req_details()
+    req_details = show_chatty_threads_2()
     response_parameters = [{'subject' : entry['subject'], 'conversation':entry['conversation']} for entry in req_details]
     follow_up_messages = generate_batch_response_for_bulk_reply(response_parameters)
 
@@ -298,6 +306,11 @@ def generate_batch_response_for_bulk_reply(response_parameters):
     print("done")
     return buffer
 
+def decode_base64(s):
+    decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
+    utf_msg = decoded_msg.decode('utf-8')
+    return utf_msg
+
 def show_chatty_threads_2():
     """Display threads with long conversations(>= 3 messages)
     Return: None
@@ -315,25 +328,47 @@ def show_chatty_threads_2():
         # pylint: disable=maybe-no-member
         # pylint: disable:R1710
         threads = (
-            service.users().threads().list(userId="me").execute().get("threads", [])
+            service.users().threads().list(userId="me", q="is:unread").execute().get("threads", [])
         )
+        print(len(threads))
+
         for thread in threads:
             tdata = (
                 service.users().threads().get(userId="me", id=thread["id"]).execute()
             )
             nmsgs = len(tdata["messages"])
+            conversation = []
 
-            # skip if <3 msgs in thread
-            if nmsgs > 3:
-                msg = tdata["messages"][0]["payload"]
-                subject = ""
-                for header in msg["headers"]:
-                    if header["name"] == "Subject":
-                        subject = header["value"]
-                        thread["convo"] = msg
-                        break
-                if subject:  # skip if no Subject line
-                    print(f"- {subject}, {nmsgs}")
+            if nmsgs >= 2:
+                messages = tdata['messages']
+                
+                for mssg in messages:
+
+                    if 'labelIds' in mssg and 'UNREAD' in mssg['labelIds']:
+                        thread['in_reply_to'] = mssg['id']
+
+                    if 'labelIds' in mssg and 'TRASH' in mssg['labelIds']:
+                        continue
+                    
+                    for header in mssg['payload']["headers"]:
+                        if header["name"] == "Subject":
+                            if not header['value'].startswith("Re: "):
+                                thread['subject']= header["value"]
+                                break
+                            # thread["convo"] = msg
+                            
+                    body = mssg['payload']['body']
+                    if(body['size']!=0):
+                        conversation.append(decode_base64(body['data']))
+                    else:
+                        parts = mssg['payload']['parts']
+                        for part in parts:
+                            if part['mimeType']=='text/plain':
+                                conversation.append(decode_base64(part['body']['data']))
+                thread['conversation'] = conversation
+            else:
+                threads.remove(thread)
+            
         return threads
 
     except HttpError as error:
