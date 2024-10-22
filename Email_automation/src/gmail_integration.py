@@ -162,6 +162,7 @@ def process_email_data():
         for part in parts:
             s = part.get("body").get("data")
             decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
+            # msg = decoded_msg.decode('utf-8')
             if(part.get("mimeType")=="text/plain"):
                 msg = decoded_msg.decode('utf-8')
                 conversation.append(msg)
@@ -197,12 +198,20 @@ def process_email_data():
                     email_data["references"] = header["value"]
 
         # Add the current email data to the list of messages in the thread
-        threads_dict[thread_id] = email_data
+        if thread_id in threads_dict:
+            threads_dict[thread_id].append(email_data)
+        else:
+            threadss_dict[thread_id] = [email_data]
 
     # Convert the threads dictionary to a list of extracted info
     for thread_id, messages in threads_dict.items():
         extracted_info.append(messages)
 
+
+    # email_threads = show_chatty_threads_2()
+    # for email_thread in email_threads:
+    
+    
     return extracted_info
 
 # def categorize_email(email_data):
@@ -240,6 +249,7 @@ def extract_req_details():
         counter = counter + 1
         mail_batch.append(imp_keys_dict)
 
+    
     return mail_batch
 
 #to initiate converstation in batch using initially composed customized outbound message stored in MongoDB
@@ -272,12 +282,13 @@ def extract_emails_regex(content):
 #to respond to unread mails in the thread after generating responses from LLM
 def batch_reply():
 
-    req_details = extract_req_details()
+    # req_details = extract_req_details()
+    req_details = show_chatty_threads_2()
     response_parameters = [{'subject' : entry['subject'], 'conversation':entry['conversation']} for entry in req_details]
     follow_up_messages = generate_batch_response_for_bulk_reply(response_parameters)
 
     response = extract_emails_regex(follow_up_messages)
-
+    print(response)
     for idx, entry in enumerate(req_details,start = 1):
     # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
         idx = str(idx)
@@ -287,38 +298,139 @@ def batch_reply():
 
 #to genenrate follow up messages for a batch of emails for replying in bulk
 def generate_batch_response_for_bulk_reply(response_parameters):
+    print(response_parameters[0]['subject'])
+    print(response_parameters[0]['conversation'])
+    print()
     batch = get_batches(response_parameters)
+    print(batch)
+    print()
     buffer = generate_response(batch)
-    f = open("demofile3.txt", "w")
+    f = open("demofile4.txt", "w")
     f.write(buffer)
     f.close()
     print("done")
     return buffer
 
+def decode_base64(s):
+    decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
+    utf_msg = decoded_msg.decode('utf-8')
+    return utf_msg
+
+def show_chatty_threads_2():
+    """Display threads with long conversations(>= 3 messages)
+    Return: None
+
+    Load pre-authorized user credentials from the environment.
+    TODO(developer) - See https://developers.google.com/identity
+    for guides on implementing OAuth2 for the application.
+    """
+    # creds, _ = google.auth.default()
+
+    try:
+        # create gmail api client
+        service = authenticate_gmail_api()
+
+        # pylint: disable=maybe-no-member
+        # pylint: disable:R1710
+        threads = (
+            service.users().threads().list(userId="me", q="is:unread").execute().get("threads", [])
+        )
+        lengthy_threads = []
+        print(len(threads))
+
+        for thread in threads:
+            tdata = (
+                service.users().threads().get(userId="me", id=thread["id"]).execute()
+            )
+            nmsgs = len(tdata["messages"])
+            print(nmsgs)
+            conversation = []
+            thread['threadId'] = thread["id"]
+
+            if nmsgs >= 3:
+                messages = tdata['messages']
+                
+                for mssg in messages:
+
+                    if 'labelIds' in mssg and 'UNREAD' in mssg['labelIds']:
+                        thread['in_reply_to'] = mssg['id']
+
+                    if 'labelIds' in mssg and 'TRASH' in mssg['labelIds']:
+                        threads.remove(thread)
+                        continue
+                    
+                    for header in mssg['payload']["headers"]:
+                        if header["name"] == "Subject":
+                            if not header['value'].startswith("Re: "):
+                                thread['subject']= header["value"]
+                        elif header["name"] == "Return-Path":
+                            reply_to_email = header["value"]
+                            if reply_to_email.startswith('<'):
+                                reply_to_email = reply_to_email[1:]
+                            if reply_to_email.endswith('>'):
+                                reply_to_email = reply_to_email[:-1]
+                            thread['recepient'] = reply_to_email
+                            # thread["convo"] = msg
+                        elif header["name"] == "To":
+                            thread['master_email'] = header["value"]
+                        elif header["name"].lower() == "date":
+                            thread["date"] = header["value"]
+                        elif header["name"].lower() == "message-id":
+                            thread["message_id"] = header["value"]
+                        elif header["name"].lower() == "in-reply-to":
+                            thread["in_reply_to"] = header["value"]
+                        elif header["name"].lower() == "references":
+                            thread["references"] = header["value"]
+
+                    body = mssg['payload']['body']
+                    if(body['size']!=0):
+                        conversation.append(decode_base64(body['data']))
+                    else:
+                        parts = mssg['payload']['parts']
+                        for part in parts:
+                            if part['mimeType']=='text/plain':
+                                conversation.append(decode_base64(part['body']['data']))
+                thread['conversation'] = conversation
+                lengthy_threads.append(thread)
+                # return lengthy_threads
+            
+            
+        return lengthy_threads
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+
+
 if __name__ == "__main__":
+    # print(show_chatty_threads_2())
+    print(batch_reply())
 #    f = open("demofile3.txt", "w")
 #    f.write(str(process_email_data()))
 #    f.close()
-    emails = show_chatty_threads()[1]
+    # emails = show_chatty_threads()[1]
 
     # Prepare a dictionary to hold messages by thread ID
-    threads_dict = {}
+    # threads_dict = {}
 
-    for email in emails:
-        thread_id = email.get("threadId")
+    # for email in emails:
+    #     thread_id = email.get("threadId")
         
-        # If the thread ID is not already in the dictionary, initialize it
-        if thread_id not in threads_dict:
-            threads_dict[thread_id] = []
+    #     # If the thread ID is not already in the dictionary, initialize it
+    #     if thread_id not in threads_dict:
+    #         threads_dict[thread_id] = []
 
-        conversation = []
-        parts = email.get("messages").get("parts")
-        for part in parts:
-            s = part.get("body").get("data")
-            decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
-            if(part.get("mimeType")=="text/plain"):
-                msg = decoded_msg.decode('utf-8')
-                conversation.append(msg)
-        print(conversation)
-        print(len(conversation))
-    print(show_chatty_threads()[1])
+    #     conversation = []
+    #     parts = email.get("messages").get("parts")
+    #     for part in parts:
+    #         s = part.get("body").get("data")
+    #         decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
+    #         if(part.get("mimeType")=="text/plain"):
+    #             msg = decoded_msg.decode('utf-8')
+    #             conversation.append(msg)
+    #     print(conversation)
+    #     print(len(conversation))
+    # for thread in process_email_data():
+    #     for message in thread:
+    #         print(message['conversation'][0])
+    #         print('---------------------------------')
+    #     print('========================================')
