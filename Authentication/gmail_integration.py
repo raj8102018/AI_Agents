@@ -33,7 +33,7 @@ def authenticate_gmail_api():
             token.write(creds.to_json())
     return build("gmail", "v1", credentials=creds)
 
-#to send an email
+#to send an email 
 def gmail_send_message(sender,recepient,subject,content):
     """Create and send an email message and print the returned message ID."""
     try:
