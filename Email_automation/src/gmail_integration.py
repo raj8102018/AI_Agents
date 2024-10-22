@@ -288,7 +288,7 @@ def batch_reply():
     follow_up_messages = generate_batch_response_for_bulk_reply(response_parameters)
 
     response = extract_emails_regex(follow_up_messages)
-
+    print(response)
     for idx, entry in enumerate(req_details,start = 1):
     # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
         idx = str(idx)
@@ -298,9 +298,14 @@ def batch_reply():
 
 #to genenrate follow up messages for a batch of emails for replying in bulk
 def generate_batch_response_for_bulk_reply(response_parameters):
+    print(response_parameters[0]['subject'])
+    print(response_parameters[0]['conversation'])
+    print()
     batch = get_batches(response_parameters)
+    print(batch)
+    print()
     buffer = generate_response(batch)
-    f = open("demofile3.txt", "w")
+    f = open("demofile4.txt", "w")
     f.write(buffer)
     f.close()
     print("done")
@@ -330,6 +335,7 @@ def show_chatty_threads_2():
         threads = (
             service.users().threads().list(userId="me", q="is:unread").execute().get("threads", [])
         )
+        lengthy_threads = []
         print(len(threads))
 
         for thread in threads:
@@ -337,9 +343,11 @@ def show_chatty_threads_2():
                 service.users().threads().get(userId="me", id=thread["id"]).execute()
             )
             nmsgs = len(tdata["messages"])
+            print(nmsgs)
             conversation = []
+            thread['threadId'] = thread["id"]
 
-            if nmsgs >= 2:
+            if nmsgs >= 3:
                 messages = tdata['messages']
                 
                 for mssg in messages:
@@ -348,15 +356,32 @@ def show_chatty_threads_2():
                         thread['in_reply_to'] = mssg['id']
 
                     if 'labelIds' in mssg and 'TRASH' in mssg['labelIds']:
+                        threads.remove(thread)
                         continue
                     
                     for header in mssg['payload']["headers"]:
                         if header["name"] == "Subject":
                             if not header['value'].startswith("Re: "):
                                 thread['subject']= header["value"]
-                                break
+                        elif header["name"] == "Return-Path":
+                            reply_to_email = header["value"]
+                            if reply_to_email.startswith('<'):
+                                reply_to_email = reply_to_email[1:]
+                            if reply_to_email.endswith('>'):
+                                reply_to_email = reply_to_email[:-1]
+                            thread['recepient'] = reply_to_email
                             # thread["convo"] = msg
-                            
+                        elif header["name"] == "To":
+                            thread['master_email'] = header["value"]
+                        elif header["name"].lower() == "date":
+                            thread["date"] = header["value"]
+                        elif header["name"].lower() == "message-id":
+                            thread["message_id"] = header["value"]
+                        elif header["name"].lower() == "in-reply-to":
+                            thread["in_reply_to"] = header["value"]
+                        elif header["name"].lower() == "references":
+                            thread["references"] = header["value"]
+
                     body = mssg['payload']['body']
                     if(body['size']!=0):
                         conversation.append(decode_base64(body['data']))
@@ -366,17 +391,19 @@ def show_chatty_threads_2():
                             if part['mimeType']=='text/plain':
                                 conversation.append(decode_base64(part['body']['data']))
                 thread['conversation'] = conversation
-            else:
-                threads.remove(thread)
+                lengthy_threads.append(thread)
+                # return lengthy_threads
             
-        return threads
+            
+        return lengthy_threads
 
     except HttpError as error:
         print(f"An error occurred: {error}")
 
 
 if __name__ == "__main__":
-    print(show_chatty_threads_2())
+    # print(show_chatty_threads_2())
+    print(batch_reply())
 #    f = open("demofile3.txt", "w")
 #    f.write(str(process_email_data()))
 #    f.close()
