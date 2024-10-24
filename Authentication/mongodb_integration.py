@@ -56,3 +56,15 @@ def create_user(first_name, last_name, user_name, email, password):
     }
     leads_collection.insert_one(user)
     return True
+
+def create_guser(name, email):
+    leads_collection = get_mongo_collection()
+    if get_user_by_email(email):
+        return False  # User already exists
+    user = {
+        "email": email,
+        "name": name,
+        "oauth_provider": "google",  # Optional field to store OAuth provider
+    }
+    leads_collection.insert_one(user)
+    return True
