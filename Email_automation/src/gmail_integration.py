@@ -7,7 +7,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import re
-import time
+import time 
+import json
 import textwrap
 
 from mongodb_integration import leads_for_initial_contact
@@ -93,9 +94,7 @@ def gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
 
 #to get threads in the inbox which are unread
 def show_chatty_threads():
-    
-    """Display threads with long conversations (>= 3 messages).
-    
+    """Display threads with long conversations (>= 3 messages).  
     Returns: tuple (list of unread_mails, list of chatty_threads)
     """
     try:
@@ -201,31 +200,13 @@ def process_email_data():
         if thread_id in threads_dict:
             threads_dict[thread_id].append(email_data)
         else:
-            threadss_dict[thread_id] = [email_data]
+            threads_dict[thread_id] = [email_data]
 
     # Convert the threads dictionary to a list of extracted info
     for thread_id, messages in threads_dict.items():
         extracted_info.append(messages)
-
-
-    # email_threads = show_chatty_threads_2()
-    # for email_thread in email_threads:
-    
-    
+        
     return extracted_info
-
-# def categorize_email(email_data):
-#     # Categorize emails based on certain conditions (can be modified)
-#     if "INBOX" in email_data["labelIds"]:
-#         if "UNREAD" in email_data["labelIds"]:
-#             if re.search(r"(urgent|asap|important)", email_data["snippet"], re.I):
-#                 return "fetch_response"
-#             elif re.search(r"(follow up|reminder)", email_data["snippet"], re.I):
-#                 return "write_followup"
-#         else:
-#             if email_data["from"]:
-#                 return "categorize"
-#     return "no_action"
 
 #to use the data returned from process_email_data to extract relevant information for batch reply
 def extract_req_details():
@@ -273,9 +254,9 @@ def extract_emails_regex(content):
         
         # Find all matches with the pattern
         matches = re.findall(email_pattern, content, re.DOTALL)
-        
+        print(matches)
         # Convert matches into the desired dictionary format
-        responses = {number: body.strip() for number, body in matches}
+        responses = {int(number): body.strip() for number, body in matches}
         
         return responses
 
@@ -284,31 +265,24 @@ def batch_reply():
 
     # req_details = extract_req_details()
     req_details = show_chatty_threads_2()
-    response_parameters = [{'subject' : entry['subject'], 'conversation':entry['conversation']} for entry in req_details]
-    follow_up_messages = generate_batch_response_for_bulk_reply(response_parameters)
-
-    response = extract_emails_regex(follow_up_messages)
-    print(response)
-    for idx, entry in enumerate(req_details,start = 1):
-    # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
-        idx = str(idx)
-        gmail_reply_message(entry['master_email'],entry['recepient'],entry['subject'],response[idx],entry['message_id'],entry['threadId'])
+    print(req_details)
+    # response_parameters = [{'subject' : entry['subject'], 'conversation':entry['conversation']} for entry in req_details]
+    # follow_up_messages = generate_batch_response_for_bulk_reply(response_parameters)
+    # cleaned_response = re.sub(r"```json|```", "", follow_up_messages).strip()
+    # data_dict = json.loads(cleaned_response)    
+    # for idx, entry in enumerate(req_details,start = 1):
+    #     index = str(idx)
+    #  # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
+    #     gmail_reply_message(entry['master_email'],entry['recepient'],entry['subject'],data_dict[index],entry['message_id'],entry['threadId'])
+    # print("successfully sent")
     
-    print("successfully sent")
-
 #to genenrate follow up messages for a batch of emails for replying in bulk
 def generate_batch_response_for_bulk_reply(response_parameters):
-    print(response_parameters[0]['subject'])
-    print(response_parameters[0]['conversation'])
-    print()
+    
     batch = get_batches(response_parameters)
-    print(batch)
-    print()
+    
     buffer = generate_response(batch)
-    f = open("demofile4.txt", "w")
-    f.write(buffer)
-    f.close()
-    print("done")
+    
     return buffer
 
 def decode_base64(s):
@@ -329,34 +303,36 @@ def show_chatty_threads_2():
     try:
         # create gmail api client
         service = authenticate_gmail_api()
-
-        # pylint: disable=maybe-no-member
-        # pylint: disable:R1710
+        
         threads = (
             service.users().threads().list(userId="me", q="is:unread").execute().get("threads", [])
         )
         lengthy_threads = []
-        print(len(threads))
 
         for thread in threads:
             tdata = (
                 service.users().threads().get(userId="me", id=thread["id"]).execute()
             )
             nmsgs = len(tdata["messages"])
-            print(nmsgs)
             conversation = []
             thread['threadId'] = thread["id"]
+            is_last_msg_sent = False
 
-            if nmsgs >= 3:
+            if nmsgs >= 2:
                 messages = tdata['messages']
                 
                 for mssg in messages:
 
                     if 'labelIds' in mssg and 'UNREAD' in mssg['labelIds']:
                         thread['in_reply_to'] = mssg['id']
+                    
+                    if 'labelIds' in mssg and 'SENT' in mssg['labelIds']:
+                        is_last_msg_sent = True
+                    elif 'labelIds' in mssg and 'SENT' not in mssg['labelIds']:
+                        is_last_msg_sent = False
 
                     if 'labelIds' in mssg and 'TRASH' in mssg['labelIds']:
-                        threads.remove(thread)
+                        # threads.remove(thread)
                         continue
                     
                     for header in mssg['payload']["headers"]:
@@ -391,7 +367,9 @@ def show_chatty_threads_2():
                             if part['mimeType']=='text/plain':
                                 conversation.append(decode_base64(part['body']['data']))
                 thread['conversation'] = conversation
-                lengthy_threads.append(thread)
+                
+                if not is_last_msg_sent:
+                    lengthy_threads.append(thread)
                 # return lengthy_threads
             
             
@@ -402,35 +380,5 @@ def show_chatty_threads_2():
 
 
 if __name__ == "__main__":
-    # print(show_chatty_threads_2())
-    print(batch_reply())
-#    f = open("demofile3.txt", "w")
-#    f.write(str(process_email_data()))
-#    f.close()
-    # emails = show_chatty_threads()[1]
-
-    # Prepare a dictionary to hold messages by thread ID
-    # threads_dict = {}
-
-    # for email in emails:
-    #     thread_id = email.get("threadId")
-        
-    #     # If the thread ID is not already in the dictionary, initialize it
-    #     if thread_id not in threads_dict:
-    #         threads_dict[thread_id] = []
-
-    #     conversation = []
-    #     parts = email.get("messages").get("parts")
-    #     for part in parts:
-    #         s = part.get("body").get("data")
-    #         decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
-    #         if(part.get("mimeType")=="text/plain"):
-    #             msg = decoded_msg.decode('utf-8')
-    #             conversation.append(msg)
-    #     print(conversation)
-    #     print(len(conversation))
-    # for thread in process_email_data():
-    #     for message in thread:
-    #         print(message['conversation'][0])
-    #         print('---------------------------------')
-    #     print('========================================')
+   
+    batch_reply()
