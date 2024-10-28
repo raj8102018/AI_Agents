@@ -12,7 +12,7 @@ import json
 import textwrap
 
 from mongodb_integration import leads_for_initial_contact
-from email_response_generation import get_batches, process_email_batch_optimized, generate_response
+from email_response_generation import get_batches, process_email_batch_optimized, generate_response, get_summary
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"]
 #SCOPES = ["https://mail.google.com/"]
@@ -259,31 +259,37 @@ def extract_emails_regex(content):
         responses = {int(number): body.strip() for number, body in matches}
         
         return responses
-
+ 
 #to respond to unread mails in the thread after generating responses from LLM
 def batch_reply():
 
     # req_details = extract_req_details()
     req_details = show_chatty_threads_2()
-    print(req_details)
-    # response_parameters = [{'subject' : entry['subject'], 'conversation':entry['conversation']} for entry in req_details]
-    # follow_up_messages = generate_batch_response_for_bulk_reply(response_parameters)
-    # cleaned_response = re.sub(r"```json|```", "", follow_up_messages).strip()
-    # data_dict = json.loads(cleaned_response)    
-    # for idx, entry in enumerate(req_details,start = 1):
-    #     index = str(idx)
-    #  # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
-    #     gmail_reply_message(entry['master_email'],entry['recepient'],entry['subject'],data_dict[index],entry['message_id'],entry['threadId'])
-    # print("successfully sent")
+    response_parameters = [{'subject' : entry['subject'], 'conversation':entry['conversation']} for entry in req_details]
+    follow_up_messages = generate_batch_response_for_bulk_reply(response_parameters)
+    cleaned_response = re.sub(r"```json|```", "", follow_up_messages).strip()
+    messages_dict = json.loads(cleaned_response)
+    print(messages_dict)
+    for idx, entry in enumerate(req_details,start = 1):
+        index = str(idx)
+     # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
+        gmail_reply_message(entry['master_email'],entry['recepient'],entry['subject'],messages_dict[index],entry['message_id'],entry['threadId'])
+    print("successfully sent")
     
 #to genenrate follow up messages for a batch of emails for replying in bulk
 def generate_batch_response_for_bulk_reply(response_parameters):
     
     batch = get_batches(response_parameters)
     
-    buffer = generate_response(batch)
+    summaries = get_summary(batch)
     
-    return buffer
+    cleaned_summaries = re.sub(r"```json|```", "", summaries).strip()
+    
+    data_dict = json.loads(cleaned_summaries)
+        
+    follow_up = generate_response(data_dict)
+        
+    return follow_up
 
 def decode_base64(s):
     decoded_msg = base64.urlsafe_b64decode(s + '=' * (4 - len(s) % 4))
@@ -379,6 +385,6 @@ def show_chatty_threads_2():
         print(f"An error occurred: {error}")
 
 
-if __name__ == "__main__":
-   
+if __name__ == "__main__":   
     batch_reply()
+    # batch_mail_initiation()
