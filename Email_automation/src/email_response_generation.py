@@ -108,25 +108,25 @@ def get_summary(batch):
     #       f" Return the output as a JSON object with the email number (integer only) as the key and the summary of the email thread as the value."
     #       f" Your name is Yuvraj, and your company name is QState.")
     
-    # prompt = (f"You are given {len(batch)} email conversation threads between a client and a business sales executive."
-    #       f" Each conversation includes a subject line providing context and a message exchange between the two parties."
-    #       f" The data is formatted as follows: {formatted_batch}."
-    #       f" Summarize each conversation into a concise paragraph, specifying who provided each piece of information."
-    #       f" Each summary should highlight key points, exchanges, and any action items, clearly labeling client and executive contributions."
-    #       f" This summary will be used to draft a follow-up response for each conversation."
-    #       f" Return the output as a JSON object with the email number (integer only) as the key and the conversation summary as the value."
-    #       f" For context, your name is Yuvraj and your company is QState.")
+    prompt = (f"You are given {len(batch)} email conversation threads between a client and a business sales executive."
+          f" Each conversation includes a subject line providing context and a message exchange between the two parties."
+          f" The data is formatted as follows: {formatted_batch}."
+          f" Summarize each conversation into a concise paragraph, specifying who provided each piece of information."
+          f" Each summary should highlight key points, exchanges, and any action items, clearly labeling client and executive contributions."
+          f" This summary will be used to draft a follow-up response for each conversation."
+          f" Return the output as a JSON object with the email number (integer only) as the key and the conversation summary as the value."
+          f" For context, your name is Yuvraj and your company is QState.")
     
-    prompt = (
-    f"You are given {len(batch)} email conversation threads between a client and a business sales executive. "
-    f"Each conversation includes a subject line that indicates the context, followed by a message exchange between the two parties. "
-    f"The data is formatted as follows: {formatted_batch}. "
-    f"For each conversation, analyze the subject and content carefully, then write a personalized follow-up email body (excluding the subject line). "
-    f"Ensure your response acknowledges the client's interest, confirms the meeting details, and briefly reiterates key points of discussion. "
-    f"Do not repeat any redundant information that is already evident from the summaries provided. "
-    f"Additionally, do not include any placeholders for links or documents, as this will be managed by another agent. "
-    f"Return the output as a JSON object with the email number (integer only) as the key and the follow-up email body as the value. "
-    f"Your name is Yuvraj, and your company is QState.")
+    # prompt = (
+    # f"You are given {len(batch)} email conversation threads between a client and a business sales executive. "
+    # f"Each conversation includes a subject line that indicates the context, followed by a message exchange between the two parties. "
+    # f"The data is formatted as follows: {formatted_batch}. "
+    # f"For each conversation, analyze the subject and content carefully, then write a personalized follow-up email body (excluding the subject line). "
+    # f"Ensure your response acknowledges the client's interest, confirms the meeting details, and briefly reiterates key points of discussion. "
+    # f"Do not repeat any redundant information that is already evident from the summaries provided. "
+    # f"Additionally, do not include any placeholders for links or documents, as this will be managed by another agent. "
+    # f"Return the output as a JSON object with the email number (integer only) as the key and the follow-up email body as the value. "
+    # f"Your name is Yuvraj, and your company is QState.")
 
 
     try:
@@ -153,6 +153,6 @@ def get_summary(batch):
     except KeyError as key_err:
         print("API key not found. Make sure it's set correctly in the environment variables.")
     
-    
+  
 if __name__ == "__main__":
     pass
