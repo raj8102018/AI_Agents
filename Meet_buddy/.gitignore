@@ -1,6 +1,8 @@
 # Virtual environment
 email_env/
 my_env/
+calendar_env/
+
 # Byte-compiled files
 *.pyc
 __pycache__/

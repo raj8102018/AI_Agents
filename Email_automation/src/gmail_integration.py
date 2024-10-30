@@ -402,6 +402,6 @@ def show_chatty_threads_2():
         print(f"An error occurred: {error}")
         
 if __name__ == "__main__":  
-    batch_reply()
-    # batch_mail_initiation()
+    # batch_reply()
+    batch_mail_initiation()
     # print(show_chatty_threads_2())
