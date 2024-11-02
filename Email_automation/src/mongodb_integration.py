@@ -103,7 +103,4 @@ def delete_leads(lead_id_list):
 
 if __name__ == "__main__":
     
-    # output = leads_for_initial_contact()
-    # for i in output:
-    #     print(i,'\n')
     print(fetch_leads())
