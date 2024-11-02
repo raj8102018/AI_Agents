@@ -141,7 +141,7 @@ def decode_base64(s):
     utf_msg = decoded_msg.decode('utf-8')
     return utf_msg
 
-def show_chatty_threads_2():
+def show_chatty_threads():
     """Display threads with long conversations(>= 3 messages)
     Return: None
 
@@ -243,7 +243,7 @@ def batch_reply():
                     "UNREAD"
                     ]
                 }
-    req_details = show_chatty_threads_2()
+    req_details = show_chatty_threads()
     if len(req_details) > 0:
         response_parameters = [{'subject' : entry['subject'], 'conversation':entry['conversation'], 'date': entry['date']} for entry in req_details]
         batch = get_batches(response_parameters)
