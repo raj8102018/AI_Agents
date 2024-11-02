@@ -41,7 +41,7 @@ second_prompt = PromptTemplate.from_template(
     
     "1. **Follow-up Leads**: For entries that indicate the lead is currently in follow-up, create a JSON object with the entry ID as the key and the summary as the value.\n"
     
-    "2. **Meeting Scheduled Leads**: For entries where the client has mentioned a specific meeting time, create another JSON object with the entry ID as the key and include both the summary and date.\n"
+    "2. **Meeting Scheduled Leads**: For entries where the client has mentioned a specific meeting time, create another JSON object with the entry ID as the key and include both the summary and date in the value.\n"
     
     "3. **Follow-up Suggestions**: For remaining entries, if the client has rejected the offer just draft a polite reply or else generate a follow-up email body that acknowledges the client’s interest, reiterates key points from the summary, and requests their availability for further discussion. "
     "Create a JSON object with the entry ID as the key and the follow-up email text as the value. \n\n"
