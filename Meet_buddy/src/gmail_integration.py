@@ -260,44 +260,27 @@ def batch_reply():
         follow_up_details = re.sub(suffix, "]", follow_up_details)
 
         # print(follow_up_details)
-        follow_up_details_arr = json.loads(follow_up_details)
-        print(follow_up_details_arr)
-        
+        follow_up_details_arr = json.loads(follow_up_details)  
+        dict_to_schedule = follow_up_details_arr[1]
+        dict_followups = follow_up_details_arr[0]
+        dict_leadstorespond = follow_up_details_arr[2]
+        # print("dict_followup:", dict_followups)
+        # print("dict to schedule:", dict_to_schedule)
+        # print("dict to close:", dict_leadstorespond)
 
-        # summaries = get_summary(batch)
-        # cleaned_summaries = re.sub(r"```json|```", "", summaries).strip()
-        # data_dict = json.loads(cleaned_summaries)
-        # print(data_dict)
-        # data_dict_with_date = {key: f"{value} {date}" for key, value in data_dict.items()}
-        # follow_up = generate_response(data_dict)
-        # print(follow_up)
-        # follow_up_messages = follow_up
-        # cleaned_response = re.sub(r"```json|```", "", follow_up_details).strip()
-        # Splitting the input string into separate dictionary strings
-        
-        # json_parts = cleaned_response.split('\n\n', 1)
-        # print(json_parts)
-        # dict_to_schedule = json.loads(json_parts[1])
-        # dict_followups = json.loads(json_parts[0])
-        # dict_leadstoclose = json.loads(json_parts[2])
-        # print("dict_followup:", dict_followups, type(dict_followups))
-        # print("dict to schedule:", dict_to_schedule, type(dict_to_schedule))
-        # print("dict to close:", dict_leadstoclose, type(dict_leadstoclose))
-
-
-        # messages_dict = json.loads(cleaned_response)
-        # print(messages_dict)
-        # service = authenticate_gmail_api()
-        # for idx, entry in enumerate(req_details,start = 1):
-        #     index = str(idx)
-        # # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
-        #     gmail_reply_message(entry['master_email'],entry['recepient'],entry['subject'],dict_followups[index],entry['message_id'],entry['threadId'])
-        #     service.users().threads().modify(userId="me", id=entry['threadId'], body=post_data).execute()
-        # print("successfully sent")
-
+        service = authenticate_gmail_api()
+        for idx, entry in enumerate(req_details,start = 1):
+            index = str(idx)
+            if index in dict_leadstorespond.keys():
+        # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
+                gmail_reply_message(entry['master_email'],entry['recepient'],entry['subject'],dict_leadstorespond[index],entry['message_id'],entry['threadId'])
+                service.users().threads().modify(userId="me", id=entry['threadId'], body=post_data).execute()
+            elif index in dict_followups or dict_to_schedule:
+                service.users().threads().modify(userId="me", id=entry['threadId'], body=post_data).execute()
+        print("success")
     else:
          return
 
 if __name__ == "__main__":  
     batch_reply()
-    
+    # batch_mail_initiation()    

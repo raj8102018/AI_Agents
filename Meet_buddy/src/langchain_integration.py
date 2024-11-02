@@ -37,17 +37,22 @@ first_prompt = PromptTemplate.from_template(
 second_prompt = PromptTemplate.from_template(
     "You are an AI tasked with classifying email conversation threads between a client and a business sales executive. "
     "Here are the entries: {summaries}. Each entry includes a summary and a date. "
-    "Your task is to classify each entry into three separate JSON objects:\n\n"
+    "Your task is to classify each entry into one of three types of responses, strictly following these rules:\n\n"
     
-    "1. **Follow-up Leads**: For entries that indicate the lead is currently in follow-up, create a JSON object with the entry ID as the key and the summary as the value.\n"
+    "1. **Meeting Scheduled**: For entries where the client has confirmed or proposed a specific time for a meeting, add it to the 'Meeting Scheduled' JSON object. Use the entry ID as the key, and include both the summary and date in the value.\n\n"
     
-    "2. **Meeting Scheduled Leads**: For entries where the client has mentioned a specific meeting time, create another JSON object with the entry ID as the key and include both the summary and date in the value.\n"
+    "2. **Recontact Needed**: For entries where the client explicitly requests to be contacted at a later date, such as 'Please follow up after a month,' add it to the 'Recontact Needed' JSON object. Use the entry ID as the key, with the summary as the value.\n\n"
     
-    "3. **Follow-up Suggestions**: For remaining entries, if the client has rejected the offer just draft a polite reply or else generate a follow-up email body that acknowledges the client’s interest, reiterates key points from the summary, and requests their availability for further discussion. "
-    "Create a JSON object with the entry ID as the key and the follow-up email text as the value. \n\n"
+    "3. **Follow-up Suggested**: For all remaining entries, if the client has declined the offer, generate a polite closing message. For other entries, generate a follow-up email acknowledging the client’s interest, restating key points, and requesting their availability for further discussion. Add these to the 'Follow-up Suggested' JSON object, with the entry ID as the key and the generated email body as the value.\n\n"
     
-    "Return only the three JSON objects, without any additional text."
+    "Ensure each entry is assigned to **only one** category, based on the first applicable rule: prioritize 'Meeting Scheduled' over 'Recontact Needed,' and 'Recontact Needed' over 'Follow-up Suggested.'\n\n"
+    
+    "Return three JSON objects in this exact order: `Meeting Scheduled`, `Recontact Needed`, and `Follow-up Suggested`. "
+    "If no entries match a category, return an empty JSON object for that category. "
+    "Return only the JSON objects directly, without any category labels or additional text."
 )
+
+
 
 # Define the first chain: Summarization
 summarization_chain = LLMChain(
