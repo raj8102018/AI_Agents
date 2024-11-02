@@ -251,6 +251,17 @@ def batch_reply():
         follow_up_details = overall_simple_chain.run(first_data_input)
        
         print(follow_up_details)
+        print()
+        prefix = r'```json(\n)*'
+        suffix = r'```(\n)*'
+
+        follow_up_details = re.sub(suffix+prefix, ",", follow_up_details)
+        follow_up_details = re.sub(prefix, "[", follow_up_details)
+        follow_up_details = re.sub(suffix, "]", follow_up_details)
+
+        # print(follow_up_details)
+        follow_up_details_arr = json.loads(follow_up_details)
+        print(follow_up_details_arr)
         
 
         # summaries = get_summary(batch)
