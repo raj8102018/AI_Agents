@@ -6,10 +6,10 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), 'src')))
 from mongodb_integration import fetch_leads
 from model import predict_lead
 
-import tensorflow as tf
+# import tensorflow as tf
 
-# Suppress most messages:
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+# # Suppress most messages:
+# tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 def classify_lead(job_title, industry):
     """

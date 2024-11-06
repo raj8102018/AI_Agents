@@ -1,3 +1,5 @@
+import os
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,6 +8,7 @@ from transformers import BertTokenizer, TFBertForSequenceClassification, AdamWei
 from data_preprocessing import get_datasets  # Import the datasets
 
 # Suppress most messages:
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 

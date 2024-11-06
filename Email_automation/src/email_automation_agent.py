@@ -1,6 +1,6 @@
 from gmail_integration import authenticate_gmail_api, batch_mail_initiation, batch_reply
 
-class EmailAutomationAgent:
+class EmailAutomation:
     def __init__(self):
         pass
     def run(self):
@@ -21,6 +21,6 @@ class EmailAutomationAgent:
         
         
 if __name__ == "__main__":
-    my_obj = EmailAutomationAgent()
+    my_obj = EmailAutomation()
     my_obj.run()
     my_obj.bulk_reply()

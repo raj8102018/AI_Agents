@@ -4,10 +4,10 @@ import time
 import logging
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), 'src')))
 
-import tensorflow as tf
+# import tensorflow as tf
 
-# Suppress most messages:
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+# # Suppress most messages:
+# tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 from mongodb_integration import update_leads
 
@@ -78,10 +78,7 @@ def generate_response(batch):
 	except KeyError as key_err:
 		print("API key not found. Make sure it's set correctly in the environment variables.")    
 
-print(lead_info)
-# get batches from lead info
 batches = get_batches(lead_info)
-print(batches)
 # loop through each batch and update the leads
 def batch_processing(batches):
 	for batch in batches:

@@ -71,7 +71,7 @@ def gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
         message["To"] = recepient  # Recipient's email
         message["From"] = sender  # Your email
         message["Subject"] = f"Re: {subject}"  # Use 'Re:' for replies
-    
+  
         # Set the In-Reply-To header
         message["In-Reply-To"] = message_id
         
@@ -82,7 +82,7 @@ def gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
         create_message = {
             "raw": encoded_message,
-            "threadId": thread_id  # Thread ID
+            "threadId": thread_id  # Thread ID 
         }
 
         # Send the email

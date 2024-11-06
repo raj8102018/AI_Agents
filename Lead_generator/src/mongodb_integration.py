@@ -4,7 +4,6 @@ from pymongo import UpdateOne
 import sys
 import os
 import random
-import time
 from bson.objectid import ObjectId
 
 
@@ -116,7 +115,7 @@ def delete_leads(lead_id_list):
         print("No leads found with the specified IDs.")
 
 
-leads_n = add_new_leads(new_lead_list)
+# leads_n = add_new_leads(new_lead_list)
 # time.sleep(30)
 # delete_leads(leads_n)
 
