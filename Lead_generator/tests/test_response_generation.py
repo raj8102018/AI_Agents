@@ -1,24 +1,15 @@
+"""
+This module consists of basic testing of functions written in src module
+"""
+#pylint: disable=import-error
 import os
 import sys
 import random
-from pymongo import MongoClient
-from bson.objectid import ObjectId
-from config.settings import MONGODB_URI, MONGODB_DB
-from src.response_generation import batch_processing, get_batches
-from src.lead_classification import lead_classification_update
-from src.mongodb_integration import update_leads
-
-
+import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-
-# Function to connect to MongoDB
-def connect_to_mongodb():
-    client = MongoClient(MONGODB_URI)
-    db = client[MONGODB_DB]
-    leads_collection = db["leads"]
-    return leads_collection
-
+from src.response_generation import batch_processing, get_batches #pylint: disable=wrong-import-position
+from src.lead_classification import lead_classification_update #pylint: disable=wrong-import-position
+from src.mongodb_integration import update_leads,connect_to_mongodb, add_new_leads, delete_leads #pylint: disable=wrong-import-position
 
 # Creating random leads based on list of industries and job titles available
 Industries = [
@@ -78,53 +69,26 @@ for i in range(COUNT):
     new_lead_list.append(new_lead)
 
 
-# Function to add a new lead to the database
-def add_new_leads(leads_list):
-    leads_collection = connect_to_mongodb()
-
-    # Insert the list of new leads into the 'leads' collection
-    result = leads_collection.insert_many(leads_list)
-
-    # Print the IDs of the inserted documents
-    return result.inserted_ids
-
-
-# Function to delete multiple leads based on a list of lead IDs
-def delete_leads(lead_id_list):
-    leads_collection = connect_to_mongodb()
-
-    # Convert all lead IDs to ObjectId format
-    object_id_list = [ObjectId(lead_id) for lead_id in lead_id_list]
-
-    # Delete the leads with the specified IDs using $in operator
-    result = leads_collection.delete_many({"_id": {"$in": object_id_list}})
-
-    # Check how many documents were deleted
-    if result.deleted_count > 0:
-        print(f"{result.deleted_count} leads have been deleted.")
-    else:
-        print("No leads found with the specified IDs.")
-
-
-# flow of the text exectution
-# print(f"The lead list is as follows : {new_lead_list}\n")
-# print("\n")
-# print("adding the leads to the database!!!\n")
-# add_new_leads(new_lead_list)
-# print("new leads added!!\n")
-# print("fetching the leads from the database for classification\n")
-# lead_info = lead_classification_update()
-# print("segregating the classified leads into batches\n")
-# batches = get_batches(lead_info)
-# print("testing the response_generation by passing the leads to the api \n")
-# processed_batches = batch_processing(batches)
-# print("updating the batches to the database\n")
-# merged_list = [item for sublist in processed_batches for item in sublist]
-# # Update the leads to the database
-# update_leads(merged_list)
-# print("giving the user time to check for the update in the database\n")
-# time.sleep(60)
-# print("deleting the dummy leads from the database\n")
-# delete_leads(processed_batches)
-# print("leads have been deleted from the database\n")
-# print("the agent is working as expected!!!")
+#flow of the text exectution
+connect_to_mongodb()
+print(f"The lead list is as follows : {new_lead_list}\n")
+print("\n")
+print("adding the leads to the database!!!\n")
+add_new_leads(new_lead_list)
+print("new leads added!!\n")
+print("fetching the leads from the database for classification\n")
+lead_info = lead_classification_update()
+print("segregating the classified leads into batches\n")
+batches = get_batches(lead_info)
+print("testing the response_generation by passing the leads to the api \n")
+processed_batches = batch_processing(batches)
+print("updating the batches to the database\n")
+merged_list = [item for sublist in processed_batches for item in sublist]
+# Update the leads to the database
+update_leads(merged_list)
+print("giving the user time to check for the update in the database\n")
+time.sleep(60)
+print("deleting the dummy leads from the database\n")
+delete_leads(processed_batches)
+print("leads have been deleted from the database\n")
+print("the agent is working as expected!!!")

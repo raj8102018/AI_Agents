@@ -1,15 +1,17 @@
 """
 This module contains the transformer model training, function to predict the lead logics
 """
+# pylint: disable=import-error
+
 import os
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 # pylint: disable= no-member
-import tensorflow as tf # pylint: enable=wrong-import-position
+import tensorflow as tf # pylint: disable=wrong-import-position
 # pylint: disable=no-member
-import numpy as np #pylint: disable= import-error
-import matplotlib.pyplot as plt #pylint: disable= import-error
-from transformers import BertTokenizer, TFBertForSequenceClassification, AdamWeightDecay #pylint: disable= import-error
-from data_preprocessing import get_datasets  #pylint: disable= import-error
+import numpy as np #pylint: disable= import-error # pylint: disable=wrong-import-position
+import matplotlib.pyplot as plt #pylint: disable= import-error # pylint: disable=wrong-import-position
+from transformers import BertTokenizer, TFBertForSequenceClassification, AdamWeightDecay #pylint: disable= import-error # pylint: disable=wrong-import-position
+from data_preprocessing import get_datasets  #pylint: disable= import-error # pylint: disable=wrong-import-position
 
 # Suppress most messages:
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
