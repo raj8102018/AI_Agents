@@ -1,7 +1,6 @@
-from flask import Flask, request, jsonify
+"""This module contaings api function logic for email automation"""
+from flask import Flask, jsonify
 from flask_cors import CORS
-import numpy as np
-import os
 
 
 app = Flask(__name__)
@@ -10,8 +9,9 @@ CORS(app)
 @app.route('/emails_api', methods=['GET'])
 @app.route('/')
 def leads_api():
-        return jsonify({"status":
-        "UNDER CONSTRUCTION"
+    """temporary place holder function"""
+    return jsonify({
+        "status":"UNDER CONSTRUCTION"
     })
 
 if __name__ == '__main__':

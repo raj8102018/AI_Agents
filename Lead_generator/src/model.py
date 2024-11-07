@@ -2,7 +2,8 @@
 This module contains the transformer model training, function to predict the lead logics
 """
 # pylint: disable=import-error
-
+import warnings
+warnings.filterwarnings('ignore')
 import os
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 # pylint: disable= no-member
