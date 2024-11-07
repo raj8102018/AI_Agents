@@ -1,7 +1,7 @@
 Name,processed job_title,processed Industry_name,lead_type,lead_label
-Leanne Wilhardt,president,manufacturing,Cold,0
+Leanne Wilhardt,president,manufacturing,Warm,1
 Ron Plantz,chief executive officer,medical equipment manufacturing,Cold,0
-Aniedi James,president,retail,Cold,0
+Aniedi James,president,retail,Warm,1
 Rafael Celli,president,biotechnology research,Cold,0
 Robert Canterbury,president,software development,Hot,2
 Fahd Rawra,director,hospitals and health care,Hot,2
@@ -15,8 +15,8 @@ Cathy Gates,chief executive officer,hospitals and health care,Hot,2
 Michael Weiss,president,insurance,Cold,0
 Yuriy Kotlyar,chief executive officer,hospitals and health care,Hot,2
 Kristin George,executive director,wellness and fitness services,Cold,0
-James Madara,chief executive officer,nonprofit organizations,Cold,0
-Moe Kaadan,founder,health wellness fitness,Cold,0
+James Madara,chief executive officer,nonprofit organizations,Warm,1
+Moe Kaadan,founder,health wellness fitness,Warm,1
 Richard Lee,chief executive officer,medical device,Hot,2
 Alan Lee,vice president,medical equipment manufacturing,Cold,0
 Andreas Muhlenbeck,chief executive officer,medical equipment manufacturing,Cold,0
@@ -26,19 +26,19 @@ Stephen Trowbridge,vice president,medical equipment manufacturing,Cold,0
 Tom Shanley,president,hospitals and health care,Hot,2
 Mike Griffiths,chief executive officer,medical equipment manufacturing,Cold,0
 Yakin Patel,founder,it services and it consulting,Cold,0
-Mark Tabacinic,owner,pharmaceuticals,Cold,0
+Mark Tabacinic,owner,pharmaceuticals,Warm,1
 Steve Blazejewski,chief executive officer,medical equipment manufacturing,Cold,0
 Lou Hensley,chief executive officer,financial services,Cold,0
-Ralph Felten,general manager,wholesale,Cold,0
-Mohamed Fajr,executive director,hospitals and health care,Cold,0
+Ralph Felten,general manager,wholesale,Warm,1
+Mohamed Fajr,executive director,hospitals and health care,Warm,1
 Mark Contardo,president,medical device,Hot,2
 Jim Duncan,general manager,medical equipment manufacturing,Cold,0
 Chris Cooper,president,hospitals and health care,Hot,2
-Murat Berme,chief executive officer,health wellness fitness,Cold,0
+Murat Berme,chief executive officer,health wellness fitness,Warm,1
 Dean Bennett,chief executive officer,medical equipment manufacturing,Cold,0
 Phillip Mervis,chief executive officer,industrial machinery manufacturing,Cold,0
 Bruce Block,founder,medical equipment manufacturing,Cold,0
-Marcelo Oliver,president,design services,Cold,0
+Marcelo Oliver,president,design services,Warm,1
 Elsa Brown,president,industrial machinery manufacturing,Cold,0
 Paul Siepmann,chief executive officer,medical device,Hot,2
 Ivan Brown,chief executive officer,medical device,Hot,2
@@ -50,17 +50,17 @@ Paul Mcadam,president,retail apparel and fashion,Cold,0
 David Westgate,president,medical equipment manufacturing,Cold,0
 Tom Priselac,chief executive officer,hospitals and health care,Hot,2
 Ross Ettin,president,hospitals and health care,Hot,2
-Alex Gurrola,chief executive officer,environmental services,Cold,0
+Alex Gurrola,chief executive officer,environmental services,Warm,1
 Gene Kalwarski,chief executive officer,business consulting and services,Hot,2
 James Cooke,chief executive officer,chemical manufacturing,Cold,0
-Ismaail Aajoukah,president,manufacturing,Cold,0
+Ismaail Aajoukah,president,manufacturing,Warm,1
 Madeline Bell,chief executive officer,hospitals and health care,Hot,2
 Kurt Newman,chief executive officer,hospitals and health care,Hot,2
 Innocent Clement,chief executive officer,hospitals and health care,Hot,2
 Tomislav Mihaljevic,president,hospitals and health care,Hot,2
 Jimmy Capra,chief executive officer,medical equipment manufacturing,Cold,0
 Minglin Li,general manager,medical equipment manufacturing,Cold,0
-Timothy Wolfe,director,government administration,Cold,0
+Timothy Wolfe,director,government administration,Warm,1
 James Norris,chief executive officer,industrial machinery manufacturing,Cold,0
 Fadi Atiya,chief executive officer,hospitals and health care,Hot,2
 Jessica Chiu,cofounder,medical equipment manufacturing,Cold,0
@@ -69,21 +69,21 @@ Toufic Lorenzo,chief executive officer,hospitals and health care,Hot,2
 Larry Hicks,executive vice president,medical equipment manufacturing,Cold,0
 Louis Pagliara,president,medical device,Hot,2
 Laurel Chiaramonte,chief executive officer,software development,Hot,2
-Christian Passwaters,vice president,retail,Cold,0
+Christian Passwaters,vice president,retail,Warm,1
 David Sherman,vice president clinical market development,medical equipment manufacturing,Cold,0
-Christopher Chung,chief executive officer,nonprofit organizations,Cold,0
+Christopher Chung,chief executive officer,nonprofit organizations,Warm,1
 Scott Goldsmith,president,medical device,Hot,2
 Kirk Inoue,chief executive officer,medical device,Hot,2
 Elliott Goldberg,president,health wellness and fitness,Cold,0
 Dan Biggs,global industry director,business supplies equipment,Cold,0
 David Siegel,chief executive officer,hospitals and health care,Hot,2
-Walter Hock,president,appliances electrical and electronics manufacturing,Cold,0
+Walter Hock,president,appliances electrical and electronics manufacturing,Warm,1
 Katelyn Doepel,chief executive officer,medical equipment manufacturing,Cold,0
 Chengkun Zhang,president,computer hardware manufacturing,Cold,0
 Taweesak Jouchounchom,international director,education administration programs,Cold,0
 Richard Kaplan,president,medical equipment manufacturing,Cold,0
 Matus Knoblich,chief executive officer,hospitals and health care,Hot,2
-Luis Labrador,chief executive officer,retail,Cold,0
+Luis Labrador,chief executive officer,retail,Warm,1
 John H,owner,manufacturing,Warm,1
 Tarek Mohamed,chief executive officer,pharmaceuticals,Hot,2
 Robert Hamilton,chief executive officer,medical device,Hot,2
@@ -99,4 +99,4 @@ Kuan Chen,founder,it services and it consulting,Cold,0
 David Gomez,chief executive officer,medical equipment manufacturing,Cold,0
 Oz Ozkaya,president,medical equipment manufacturing,Cold,0
 Baruch Dor,chief executive officer,medical equipment manufacturing,Cold,0
-Patrick Leroe,vice president of operations,medical device,Cold,0
+Patrick Leroe,vice president of operations,medical device,Warm,1
