@@ -3,8 +3,7 @@ from pymongo import MongoClient
 from pymongo import UpdateOne
 import sys
 import os
-import random
-import time
+import re
 from bson.objectid import ObjectId
 
 
@@ -16,28 +15,47 @@ from config.settings import MONGODB_URI, MONGODB_DB
 def connect_to_mongodb():
     # Use the MongoDB URI from the settings
     client = MongoClient(MONGODB_URI)
+    
     # Access the specific database
     db = client[MONGODB_DB]
     
     # Access the 'leads' collection
-    leads_collection = db['leads']
+    leads_collection = db['test_emails']
     
     return leads_collection
+    #return "connect successful"
 
 def fetch_leads():
-    leads_collection = connect_to_mongodb()
-    leads = leads_collection.find({
-        'lead_type': {'$exists': False},   # Documents without 'lead_type'
-        'outbound message': {'$exists': False}  # Documents without 'outbound message'
-    })
-    leads_list = list(leads)
-    return leads_list
+    try:
+        leads_collection = connect_to_mongodb()
+        # Fetch documents where 'initial_contact' is 'No'
+        leads = leads_collection.find({
+            'Initial contact': {'$eq': 'No'},
+        })
+        leads_list = list(leads)  # Caution: consider cursor iteration if too many leads
+        return leads_list
+    except Exception as e:
+        print(f"Error fetching leads: {e}")
+        return []
+
+def leads_for_initial_contact():
+    leads_list = fetch_leads()
+    subject_regex = r"(?<=Subject:\s)(.*?)(?=\\n\\n)"
+    messagebody_regex = r"(?<=\\n\\n)(.*)"
+    mail_batch_initial = []
+    for entry in leads_list:
+        lead_details = {}
+        lead_details['recepient'] = entry['Email']
+        lead_details['subject'] = re.search(subject_regex, entry['outbound message']).group()
+        lead_details['content'] = re.search(messagebody_regex, entry['outbound message']).group()
+        mail_batch_initial.append(lead_details)
+    return mail_batch_initial
 
 def update_leads(batch):
     leads_collection = connect_to_mongodb()
 
     # Create a list to hold update operations
-    operations = []
+    operations = [] 
 
     # Prepare the update operations for each lead
     for lead in batch:
@@ -56,39 +74,7 @@ def update_leads(batch):
 
     return result  # Return the result of the bulk write operation
 
-#Creating random leads based on list of industries and job titles available
-Industries  = ['IT Services And IT Consulting', 'Software Development', 
-            'Medical Device', 'Pharmaceuticals', 'Business Consulting And Services',
-            'Hospitals And Health Care','Health, Wellness & Fitness', 'Nonprofit Organizations', 
-            'Government Administration', 'Manufacturing', 
-            'Appliances, Electrical, And Electronics Manufacturing','Retail',  'Environmental Services', 'Design Services', 
-            'Wholesale']
-Job_titles  = ['Chief Executive Officer', 'President', 'Founder', 
-            'Vice President', 'Director','Executive Director', 'Managing Director', 'Owner', 
-            'General Manager', 'Vice President of Operations','CoOwner', 'Deputy Director', 'Executive Vice President']
-count = 20 #limiting the test size to 20
 
-new_lead_list = []
-for i in range(count):
-    ind_index = random.randint(0,len(Industries)-1)
-    job_index = random.randint(0,len(Job_titles)-1)
-    new_lead = {
-        'Company': f'test#{i+1}',
-        'Website': f'test#{i+1}',
-        'Industry': Industries[ind_index],
-        'Address Street': f'test#{i+1}',
-        'City': f'test#{i+1}',
-        'State': f'test#{i+1}',
-        'Zip Code': f'test#{i+1}',
-        'Country': f'test#{i+1}',
-        'Contact Number': f'test#{i+1}',
-        'First Name': f'test#{i+1}',
-        'Last Name': f'test#{i+1}',
-        'Job Title': Job_titles[job_index],
-        'Email': f'test#{i+1}@example.com',
-        'Linkedin URL': f'test#{i+1}'
-        }
-    new_lead_list.append(new_lead)
 
 # Function to add a new lead to the database
 def add_new_leads(leads_list):
@@ -115,10 +101,6 @@ def delete_leads(lead_id_list):
     else:
         print("No leads found with the specified IDs.")
 
-
-leads_n = add_new_leads(new_lead_list)
-# time.sleep(30)
-# delete_leads(leads_n)
-
-
-
+if __name__ == "__main__":
+    
+    print(fetch_leads())

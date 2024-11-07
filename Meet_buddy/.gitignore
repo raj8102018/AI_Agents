@@ -1,17 +1,20 @@
 # Virtual environment
+email_env/
 my_env/
+calendar_env/
 
 # Byte-compiled files
 *.pyc
-__pycache__
-
+__pycache__/
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
 # Data files
-fine_tuned_bert/
 
 .env
-config
-Lead_generator/config
+config/settings.py
+
+src/credentials.json
+src/token.json
+src/dummy.py

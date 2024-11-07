@@ -34,8 +34,8 @@ def train_and_save_model():
     print(f'Validation Accuracy: {accuracy}')
 
     # Save the model and tokenizer
-    model.save_pretrained('fine_tuned_bert')
     tokenizer.save_pretrained('fine_tuned_bert')
+    model.save_pretrained('fine_tuned_bert')
 
     # Create metrics directory if it does not exist
     metrics_dir = os.getenv('METRICS_DIR', 'metrics')  # Use environment variable or default to 'metrics'
@@ -98,10 +98,11 @@ def train_and_save_model():
     plt.close()
 
 def load_model_and_tokenizer():
-    # Load the model and tokenizer from the saved directory
-    model = TFBertForSequenceClassification.from_pretrained('fine_tuned_bert')
-    tokenizer = BertTokenizer.from_pretrained('fine_tuned_bert')
+    model_dir = os.path.abspath('fine_tuned_bert')  # Use absolute path
+    model = TFBertForSequenceClassification.from_pretrained(model_dir)
+    tokenizer = BertTokenizer.from_pretrained(model_dir)
     return model, tokenizer
+
 
 def predict_lead(job_title, industry):
     model, tokenizer = load_model_and_tokenizer()
