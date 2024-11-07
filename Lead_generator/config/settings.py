@@ -1,4 +1,7 @@
-# config/settings.py
+"""
+This module contains configuration or settings for the agent
+"""
+# config/settings.py1
 
 import os
 from dotenv import load_dotenv

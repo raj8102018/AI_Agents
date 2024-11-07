@@ -1,3 +1,6 @@
+"""
+Template for configuration
+"""
 # config/settings_template.py
 
 # MongoDB settings
