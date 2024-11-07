@@ -1,8 +1,6 @@
-from flask import Flask, request, jsonify
+""""module for email automation logic"""
+from flask import Flask, request, jsonify #pylint: disable=unused-import
 from flask_cors import CORS
-import numpy as np
-import os
-
 
 app = Flask(__name__)
 CORS(app)
@@ -10,7 +8,8 @@ CORS(app)
 @app.route('/emails_api', methods=['GET'])
 @app.route('/')
 def leads_api():
-        return jsonify({"status":
+    """template route handler"""
+    return jsonify({"status":
         "UNDER CONSTRUCTION"
     })
 
