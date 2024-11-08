@@ -2,20 +2,16 @@
 This module contains lead-classification logic
 """
 # src/lead_classification.py
+#pylint: disable=wrong-import-order
+#pylint: disable=wrong-import-position
 import sys
 import os
 from .model import predict_lead # pylint: disable=import-error
 
-# import tensorflow as tf
-
-# # Suppress most messages:
-# tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), 'src')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-
-from Database.lead_generator_connector import fetch_leads
+from Database.lead_generator_connector import fetch_leads #pylint: disable=import-error
 
 def classify_lead(job_title, industry):
     """

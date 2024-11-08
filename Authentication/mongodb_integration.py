@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request, g # g is used to store global data fo
 from flask_cors import CORS  # For enabling CORS
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
-from config.settings import MONGODB_URI, MONGODB_DB
+from config.settings import MONGODB_URI, MONGODB_DB_AUTH
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -22,7 +22,7 @@ def get_mongo_client():
 def get_mongo_collection():
     """Function to access mongodb collection"""
     client = get_mongo_client()
-    db = client[MONGODB_DB]
+    db = client[MONGODB_DB_AUTH]
     return db["users"]
 
 

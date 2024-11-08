@@ -2,11 +2,11 @@
 This module consists of basic testing of functions written in src module
 """
 #pylint: disable=import-error
-import os
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 import sys
 import random
 import time
+import os
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from Lead_generator.src.response_generation import batch_processing, get_batches #pylint: disable=wrong-import-position
 from Lead_generator.src.lead_classification import lead_classification_update #pylint: disable=wrong-import-position
