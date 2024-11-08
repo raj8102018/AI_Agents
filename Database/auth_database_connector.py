@@ -1,11 +1,18 @@
 """
-This module contains the functionality for connection between database and backend code
+This module contains the functionality for database and authentication code
 """
+import os
+import sys
 from flask import Flask, jsonify, request, g # g is used to store global data for the request #pylint: disable=unused-import
 from flask_cors import CORS  # For enabling CORS
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
-from config.settings import MONGODB_URI, MONGODB_DB_AUTH
+
+# Add the parent directory to the Python path to access 'config'
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+from Config.settings import MONGODB_URI, MONGODB_DB_AUTH #pylint: disable=wrong-import-position
+
 
 # Initialize Flask app
 app = Flask(__name__)
