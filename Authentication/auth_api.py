@@ -1,7 +1,8 @@
 """
 This module contains the functionality related to different routes
 """
-
+#pylint: disable=missing-timeout
+#pylint: disable=import-error
 import os
 import sys
 import json
@@ -16,18 +17,8 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "src")))
 # Add the parent directory to the Python path to access 'config'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from Config.settings import (
-    secretkey,
-    clientid_auth,
-    clientsecret_auth,
-)  # pylint: disable=wrong-import-position
-from Database.auth_database_connector import (
-    create_user,
-    get_user_by_email,
-    get_user_by_username,
-    verify_password,
-    create_guser,
-)  # pylint: disable=line-too-long
+from Config.settings import secretkey, clientid_auth, clientsecret_auth #pylint: disable=wrong-import-position
+from Database.auth_database_connector import create_user, get_user_by_email, get_user_by_username, verify_password, create_guser # pylint: disable=line-too-long
 
 
 load_dotenv()
@@ -109,8 +100,7 @@ def callback():
         email = user_info["email"]
         name = user_info["name"]
 
-        # You can now create a user in your database using their email or check if they already exist
-        # For example:
+        # Create a user in your database using their email or check if they already exist
         user = get_user_by_email(email)  # Check if user exists in your database
         if not user:
             # If user doesn't exist, create the user
@@ -125,8 +115,7 @@ def callback():
             jsonify({"message": "Login successful!", "email": email, "name": name}),
             200,
         )
-    else:
-        return (
+    return (
             jsonify({"error": "User email not available or not verified by Google"}),
             400,
         )
@@ -161,8 +150,7 @@ def sign_up():
     # Create user in the database
     if create_user(first_name, last_name, user_name, email, password):
         return jsonify({"message": "User created successfully!"}), 201
-    else:
-        return jsonify({"error": "User already exists!"}), 409
+    return jsonify({"error": "User already exists!"}), 409
 
 
 @app.route("/", methods=["GET"])
@@ -189,17 +177,14 @@ def sign_in():
             user_by_email["password"], password
         ):  # Check the stored password hash
             return jsonify({"message": "Sign-in successful!"}), 200
-        else:
-            return jsonify({"error": "Invalid password!"}), 401  # Incorrect password
-    elif user_by_username:
+        return jsonify({"error": "Invalid password!"}), 401  # Incorrect password
+    if user_by_username:
         if verify_password(
             user_by_username["password"], password
         ):  # Check the stored password hash
             return jsonify({"message": "Sign-in successful!!"}), 200
-        else:
-            return jsonify({"error": "Invalid password!"}), 401  # Incorrect password
-    else:
-        return jsonify({"error": "User does not exist!"}), 404
+        return jsonify({"error": "Invalid password!"}), 401  # Incorrect password
+    return jsonify({"error": "User does not exist!"}), 404
 
 
 if __name__ == "__main__":
