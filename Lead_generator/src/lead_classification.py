@@ -4,8 +4,7 @@ This module contains lead-classification logic
 # src/lead_classification.py
 import sys
 import os
-from mongodb_integration import fetch_leads # pylint: disable=import-error
-from model import predict_lead # pylint: disable=import-error
+from .model import predict_lead # pylint: disable=import-error
 
 # import tensorflow as tf
 
@@ -13,6 +12,10 @@ from model import predict_lead # pylint: disable=import-error
 # tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+
+from Database.lead_generator_connector import fetch_leads
 
 def classify_lead(job_title, industry):
     """
@@ -33,3 +36,6 @@ def lead_classification_update():
         lead_type = classify_lead(job_title, industry)
         lead['lead_type'] = lead_type
     return leads
+
+if __name__ == "__main__":
+    pass

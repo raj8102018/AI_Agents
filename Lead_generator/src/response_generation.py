@@ -46,9 +46,11 @@ def generate_response(batch):
 
     prompt = (
         f"You are given a batch of {len(batch)} leads. For each lead, generate a personalized outbound message " # pylint: disable=line-too-long
-        f"to the executive, introducing AI integration solutions to streamline their business processes. " # pylint: disable=line-too-long
+        "to the executive, introducing AI integration solutions to streamline their business processes. " # pylint: disable=line-too-long
         f"Here are the details:\n\n{formatted_batch}"
         "For each lead, respond with a professional outbound message prefixed with the corresponding lead number." # pylint: disable=line-too-long
+        "For context, your name is Yuvraj, and your company is QState."
+        "Return only the same leads given without any duplication"
     )
 
     try:
@@ -88,5 +90,5 @@ def batch_processing(batches_to_process):
     """This function processes the batches in time intervals"""
     for batch in batches_to_process:
         batch = generate_response(batch)
-        time.sleep(30)
+        time.sleep(10)
     return batches_to_process

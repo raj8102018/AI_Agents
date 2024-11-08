@@ -2,17 +2,20 @@
 This module contains the transformer model training, function to predict the lead logics
 """
 # pylint: disable=import-error
-import warnings
-warnings.filterwarnings('ignore')
 import os
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+import warnings
 # pylint: disable= no-member
 import tensorflow as tf # pylint: disable=wrong-import-position
 # pylint: disable=no-member
 import numpy as np #pylint: disable= import-error # pylint: disable=wrong-import-position
 import matplotlib.pyplot as plt #pylint: disable= import-error # pylint: disable=wrong-import-position
 from transformers import BertTokenizer, TFBertForSequenceClassification, AdamWeightDecay #pylint: disable= import-error # pylint: disable=wrong-import-position
-from data_preprocessing import get_datasets  #pylint: disable= import-error # pylint: disable=wrong-import-position
+from transformers import logging
+from .data_preprocessing import get_datasets  #pylint: disable= import-error # pylint: disable=wrong-import-position
+
+logging.set_verbosity_error()
+warnings.filterwarnings("ignore", message="Some layers from the model checkpoint were not used")
 
 # Suppress most messages:
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -114,8 +117,8 @@ def train_and_save_model():
 
 def load_model_and_tokenizer():
     """This function contains the logic to load the model and tokenizer"""
-    model_dir = os.path.abspath("fine_tuned_bert")  # Use absolute path
-    model = TFBertForSequenceClassification.from_pretrained(model_dir)
+    model_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "fine_tuned_bert"))
+    model = TFBertForSequenceClassification.from_pretrained(model_dir,ignore_mismatched_sizes=True)
     tokenizer = BertTokenizer.from_pretrained(model_dir)
     return model, tokenizer
 

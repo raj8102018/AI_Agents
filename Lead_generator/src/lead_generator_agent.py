@@ -1,7 +1,14 @@
 """This module handles the functionality of the agent."""
-from mongodb_integration import update_leads  # pylint: disable=import-error
+import os
+import sys
 from lead_classification import lead_classification_update # pylint: disable=import-error
 from response_generation import batch_processing, get_batches # pylint: disable=import-error
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+
+from Database.lead_generator_connector import update_leads
+
 
 class LeadGenerator:
     """

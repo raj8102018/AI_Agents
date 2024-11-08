@@ -3,7 +3,8 @@ This module contains the functionality related to gmail api integration
 """
 #pylint: disable=no-member
 #pylint: disable=import-error
-import os.path
+import sys
+import os
 import base64
 import re
 import time
@@ -15,8 +16,15 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from langchain_integration import overall_simple_chain
-from mongodb_integration import leads_for_initial_contact
 from email_response_generation import get_batches,get_summary,generate_response
+
+
+# Add the parent directory to the Python path to access 'config'
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+
+from Database.mongodb_connector import leads_for_initial_contact
+
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = [
@@ -298,4 +306,4 @@ def batch_reply():
 
 if __name__ == "__main__":
     authenticate_gmail_api()
-    batch_reply()
+    batch_mail_initiation()
