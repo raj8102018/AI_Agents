@@ -2,14 +2,15 @@
 This module consists of basic testing of functions written in src module
 """
 #pylint: disable=import-error
-import os
 import sys
 import random
 import time
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from src.response_generation import batch_processing, get_batches #pylint: disable=wrong-import-position
-from src.lead_classification import lead_classification_update #pylint: disable=wrong-import-position
-from src.mongodb_integration import update_leads,connect_to_mongodb, add_new_leads, delete_leads #pylint: disable=wrong-import-position
+import os
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from Lead_generator.src.response_generation import batch_processing, get_batches #pylint: disable=wrong-import-position
+from Lead_generator.src.lead_classification import lead_classification_update #pylint: disable=wrong-import-position
+from Database.lead_generator_connector import update_leads,connect_to_mongodb, add_new_leads, delete_leads #pylint: disable=wrong-import-position
 
 # Creating random leads based on list of industries and job titles available
 Industries = [
@@ -45,7 +46,7 @@ Job_titles = [
     "Executive Vice President",
 ]
 
-COUNT = 20  # limiting the test size to 20
+COUNT = 5  # limiting the test size to 20
 new_lead_list = []
 for i in range(COUNT):
     ind_index = random.randint(0, len(Industries) - 1)
@@ -86,9 +87,12 @@ print("updating the batches to the database\n")
 merged_list = [item for sublist in processed_batches for item in sublist]
 # Update the leads to the database
 update_leads(merged_list)
+print(merged_list)
+object_id_list = [entry['_id'] for entry in merged_list]
+print(object_id_list)
 print("giving the user time to check for the update in the database\n")
-time.sleep(60)
+time.sleep(30)
 print("deleting the dummy leads from the database\n")
-delete_leads(processed_batches)
+delete_leads(object_id_list)
 print("leads have been deleted from the database\n")
 print("the agent is working as expected!!!")

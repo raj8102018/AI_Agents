@@ -1,11 +1,16 @@
 """This module contains lead generator api routes and functionality"""
 import os
+import warnings
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 # from model import predict_lead
 import numpy as np
 from transformers import BertTokenizer, TFBertForSequenceClassification
+
+
+warnings.filterwarnings('ignore')
+
 
 app = Flask(__name__)
 CORS(app)
