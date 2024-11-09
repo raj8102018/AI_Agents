@@ -20,8 +20,4 @@ class EmailAutomation:
         """this methods calls the function that sends a batch of replies"""
         print("segregating mails and responding")
         batch_reply()
-
-if __name__ == "__main__":
-    my_obj = EmailAutomation()
-    my_obj.run()
-    my_obj.bulk_reply()
+   

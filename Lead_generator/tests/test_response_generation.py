@@ -70,7 +70,7 @@ for i in range(COUNT):
     new_lead_list.append(new_lead)
 
 
-#flow of the text exectution
+# flow of the text exectution
 leads_collection = connect_to_mongodb()
 print(f"The lead list is as follows : {new_lead_list}\n")
 print("\n")
@@ -81,8 +81,10 @@ leads_collection = connect_to_mongodb()
 leads_list = fetch_leads(leads_collection)
 print("fetching the leads from the database for classification\n")
 lead_info = lead_classification_update(leads_list)
+print(f"leads_after_classification: {lead_info}")
 print("segregating the classified leads into batches\n")
 batches = get_batches(lead_info)
+print(f"batches:{batches}")
 print("testing the response_generation by passing the leads to the api \n")
 processed_batches = batch_processing(batches)
 print("updating the batches to the database\n")

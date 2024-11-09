@@ -23,7 +23,7 @@ from email_response_generation import get_batches,get_summary,generate_response
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 
-from Database.mongodb_connector import leads_for_initial_contact
+from Database.mongodb_connector import leads_for_initial_contact, update_leads, connect_to_mongodb
 
 
 # If modifying these scopes, delete the file token.json.
@@ -108,7 +108,9 @@ def gmail_reply_message(details):
 def batch_mail_initiation(batch_size=1):
     """To initiate converstation in batch using the outbound messages stored in MongoDB"""
     authenticate_gmail_api()
-    leads_to_contact = leads_for_initial_contact()
+    leads_collection = connect_to_mongodb()
+    leads_data_tuple = leads_for_initial_contact(leads_collection)
+    leads_to_contact = leads_data_tuple[0]
     sender = "yuvraj07102024@gmail.com"
 
     for i in range(0, len(leads_to_contact), batch_size):
@@ -120,6 +122,8 @@ def batch_mail_initiation(batch_size=1):
             )
             print("sent..." + str(len(batch)))
         time.sleep(5)
+    print("Changing contact status")
+    update_leads(leads_data_tuple[1],leads_collection)
     print("successfully sent")
 
 
@@ -303,7 +307,3 @@ def batch_reply():
                     userId="me", id=entry["threadId"], body=post_data
                 ).execute()
         print("success")
-
-if __name__ == "__main__":
-    authenticate_gmail_api()
-    batch_mail_initiation()

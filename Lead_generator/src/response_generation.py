@@ -48,9 +48,9 @@ def generate_response(batch):
         f"You are given a batch of {len(batch)} leads. For each lead, generate a personalized outbound message " # pylint: disable=line-too-long
         "to the executive, introducing AI integration solutions to streamline their business processes. " # pylint: disable=line-too-long
         f"Here are the details:\n\n{formatted_batch}"
-        "For each lead, respond with a professional outbound message prefixed with the corresponding lead number." # pylint: disable=line-too-long
+        "For each lead, respond with a professional outbound message" # pylint: disable=line-too-long
         "For context, your name is Yuvraj, and your company is QState."
-        "Return only the same leads given without any duplication"
+        "Return only the same leads given without any duplication without any symbols at the end of the message body"
     )
 
     try:
@@ -64,13 +64,10 @@ def generate_response(batch):
         response = model.generate_content(prompt)
 
         generated_content = response.text.split("Lead")
-
         for idx, message in enumerate(
             generated_content[1:], start=0
         ):  # Skipping the empty first split
-            batch[idx]["outbound message"] = "Lead" + message.strip()
-
-        # Print the generated content
+            batch[idx]["outbound message"] = "Lead" + message.replace('**','').strip()
         return batch
 
     except HTTPError as http_err:

@@ -6,10 +6,10 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from Database.lead_generator_connector import update_leads, connect_to_mongodb, fetch_leads
 from lead_classification import lead_classification_update
 from response_generation import batch_processing, get_batches
 
+from Database.lead_generator_connector import update_leads, connect_to_mongodb, fetch_leads
 
 class LeadGenerator:
     """
@@ -41,10 +41,3 @@ class LeadGenerator:
         print("updating the database with custom responses")
         update_leads(merged_list)
         print("Successfully updated")
-
-if __name__ == "__main__":
-    myobj = LeadGenerator()
-    leads_collection = myobj.run()
-    leads = myobj.fetch_and_classify(leads_collection)
-    myobj.process_and_update(leads)
-    
