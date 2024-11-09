@@ -6,7 +6,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from Database.lead_generator_connector import update_leads
+from Database.lead_generator_connector import update_leads, connect_to_mongodb, fetch_leads
 from lead_classification import lead_classification_update
 from response_generation import batch_processing, get_batches
 
@@ -21,12 +21,17 @@ class LeadGenerator:
     def run(self):
         """Indicates the start of the agent."""
         print("Running Lead Generation Agent...")
-
-    def classify_and_update(self):
+        return connect_to_mongodb()
+    
+    def fetch_and_classify(self,leads_collection):
         """To fetch the leads and run classification."""
-        print("Fetching lead data and classifying...")
-        return lead_classification_update()
+        print("Fetching lead data....")
+        leads_list = fetch_leads(leads_collection)
+        print("Classifying...")
+        leads = lead_classification_update(leads_list)
+        return leads
 
+    
     def process_and_update(self, info):
         """Contains the method that makes api calls and fetches custom responses"""
         print("processing lead data and crafting custom messages...")
@@ -38,7 +43,8 @@ class LeadGenerator:
         print("Successfully updated")
 
 if __name__ == "__main__":
-    my_obj = LeadGenerator()
-    my_obj.run()
-    lead_info = my_obj.classify_and_update()
-    my_obj.process_and_update(lead_info)
+    myobj = LeadGenerator()
+    leads_collection = myobj.run()
+    leads = myobj.fetch_and_classify(leads_collection)
+    myobj.process_and_update(leads)
+    

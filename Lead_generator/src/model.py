@@ -12,7 +12,7 @@ import numpy as np #pylint: disable= import-error # pylint: disable=wrong-import
 import matplotlib.pyplot as plt #pylint: disable= import-error # pylint: disable=wrong-import-position
 from transformers import BertTokenizer, TFBertForSequenceClassification, AdamWeightDecay #pylint: disable= import-error # pylint: disable=wrong-import-position
 from transformers import logging
-from .data_preprocessing import get_datasets  #pylint: disable= import-error # pylint: disable=wrong-import-position
+from data_preprocessing import get_datasets  #pylint: disable= import-error # pylint: disable=wrong-import-position
 
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore", message="Some layers from the model checkpoint were not used")

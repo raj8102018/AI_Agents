@@ -27,9 +27,8 @@ def connect_to_mongodb():
     return leads_collection
 
 
-def fetch_leads():
+def fetch_leads(leads_collection):
     """This function contains the logic to fetch leads from database"""
-    leads_collection = connect_to_mongodb()
     leads = leads_collection.find(
         {
             "lead_type": {"$exists": False},  # Documents without 'lead_type'
@@ -72,10 +71,11 @@ def update_leads(batch):
 
     return result  # Return the result of the bulk write operation
 
-def add_new_leads(leads_list):
+def add_new_leads(leads_list,leads_collection):
     """This function contains the logic to add a new lead to the database"""
-    leads_collection = connect_to_mongodb()
 
+    for lead_dict in leads_list:
+        lead_dict.setdefault("Initial contact", "No")
     # Insert the list of new leads into the 'leads' collection
     result = leads_collection.insert_many(leads_list)
 
