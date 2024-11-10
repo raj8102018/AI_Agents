@@ -20,4 +20,3 @@ class EmailAutomation:
         """this methods calls the function that sends a batch of replies"""
         print("segregating mails and responding")
         batch_reply()
-   

@@ -1,4 +1,4 @@
-"""This module handles the functionality of the agent."""
+"""This module handles the functionality of the lead generator agent."""
 # pylint: disable=import-error
 # pylint: disable=wrong-import-position
 import os

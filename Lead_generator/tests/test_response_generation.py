@@ -8,8 +8,8 @@ import time
 import os
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-from Lead_generator.src.response_generation import batch_processing, get_batches #pylint: disable=wrong-import-position
-from Lead_generator.src.lead_classification import lead_classification_update #pylint: disable=wrong-import-position
+from lead_generator.src.response_generation import batch_processing, get_batches #pylint: disable=wrong-import-position
+from lead_generator.src.lead_classification import lead_classification_update #pylint: disable=wrong-import-position
 from Database.lead_generator_connector import update_leads,connect_to_mongodb, add_new_leads, delete_leads, fetch_leads #pylint: disable=wrong-import-position
 
 # Creating random leads based on list of industries and job titles available
@@ -46,7 +46,7 @@ Job_titles = [
     "Executive Vice President",
 ]
 
-COUNT = 4   # limiting the test size to 20
+COUNT = 5   # limiting the test size to 20
 new_lead_list = []
 for i in range(COUNT):
     ind_index = random.randint(0, len(Industries) - 1)
@@ -67,6 +67,7 @@ for i in range(COUNT):
         "Email": f"test#{i+1}@example.com",
         "Linkedin URL": f"test#{i+1}",
     }
+    new_lead.setdefault("Initial contact", "Yes")
     new_lead_list.append(new_lead)
 
 

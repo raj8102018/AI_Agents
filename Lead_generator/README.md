@@ -16,7 +16,7 @@ To activate the environment use the command below
 .\my_env\Scripts\Activate.ps1
 
 
-<!-- Lead_generator/
+<!-- lead_generator/
 │
 ├── data/
 │   ├── raw/
