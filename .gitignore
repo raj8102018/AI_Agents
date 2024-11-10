@@ -14,6 +14,8 @@ Email_automation/src/credentials.json
 Email_automation/src/token.json
 Meet_buddy/src/credentials.json
 Meet_buddy/src/token.json
+credentials.json
+token.json
 
 # Saved LLM Model
 Lead_generator/src/fine_tuned_bert

@@ -1,5 +1,5 @@
 """This module contains the functionality of the agent packaged in a class """
-from gmail_integration import authenticate_gmail_api, batch_mail_initiation, batch_reply #pylint: disable=import-error
+from .gmail_integration import authenticate_gmail_api, batch_mail_initiation, batch_reply #pylint: disable=import-error
 
 class EmailAutomation:
     """This class contains the methods for all functions performed by the agent """

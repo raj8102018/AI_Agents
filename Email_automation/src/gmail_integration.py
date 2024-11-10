@@ -15,8 +15,8 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from langchain_integration import overall_simple_chain
-from email_response_generation import get_batches,get_summary,generate_response
+from .langchain_integration import overall_simple_chain
+from .email_response_generation import get_batches,get_summary,generate_response
 
 
 # Add the parent directory to the Python path to access 'config'

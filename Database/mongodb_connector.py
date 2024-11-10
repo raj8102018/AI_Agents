@@ -1,17 +1,16 @@
-"This module contains the functionality related to database integration for email automation and meet buddy agents"
+"Functionality related to database integration for email automation and meet buddy agents"
 # In mongodb_integration.py
 import sys
 import os
 import re
 from pymongo import MongoClient
 from pymongo import UpdateOne
-from bson.objectid import ObjectId
 
 
 # Add the parent directory to the Python path to access 'config'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from Config.settings import MONGODB_URI, MONGODB_DB_EMAIL, MONGODB_DB_LEAD #pylint: disable=wrong-import-position
+from Config.settings import MONGODB_URI, MONGODB_DB_EMAIL #pylint: disable=wrong-import-position
 
 def connect_to_mongodb():
     """This function makes the connection to mongodb"""

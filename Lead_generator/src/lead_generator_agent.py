@@ -6,10 +6,10 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from lead_classification import lead_classification_update
-from response_generation import batch_processing, get_batches
-
 from Database.lead_generator_connector import update_leads, connect_to_mongodb, fetch_leads
+
+from .lead_classification import lead_classification_update
+from .response_generation import batch_processing, get_batches
 
 class LeadGenerator:
     """
@@ -22,7 +22,7 @@ class LeadGenerator:
         """Indicates the start of the agent."""
         print("Running Lead Generation Agent...")
         return connect_to_mongodb()
-    
+
     def fetch_and_classify(self,leads_collection):
         """To fetch the leads and run classification."""
         print("Fetching lead data....")
@@ -31,7 +31,6 @@ class LeadGenerator:
         leads = lead_classification_update(leads_list)
         return leads
 
-    
     def process_and_update(self, info):
         """Contains the method that makes api calls and fetches custom responses"""
         print("processing lead data and crafting custom messages...")
