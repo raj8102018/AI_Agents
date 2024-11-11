@@ -44,7 +44,6 @@ def generate_response(batch):
 			f"Industry: {lead['Industry']}\n\n"
 		)
 
-    
     prompt = (
     f"You are given a batch of {len(batch)} leads. For each lead, generate a personalized outbound message "
     "to the executive, introducing AI integration solutions to streamline their business processes. "
