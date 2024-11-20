@@ -1,4 +1,4 @@
-"""This module handles the functionality of the agent."""
+"""This module handles the functionality of the lead generator agent."""
 # pylint: disable=import-error
 # pylint: disable=wrong-import-position
 import os
@@ -6,10 +6,10 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from Database.lead_generator_connector import update_leads
-from lead_classification import lead_classification_update
-from response_generation import batch_processing, get_batches
+from Database.lead_generator_connector import update_leads, connect_to_mongodb, fetch_leads
 
+from .lead_classification import lead_classification_update
+from .response_generation import batch_processing, get_batches
 
 class LeadGenerator:
     """
@@ -21,11 +21,15 @@ class LeadGenerator:
     def run(self):
         """Indicates the start of the agent."""
         print("Running Lead Generation Agent...")
+        return connect_to_mongodb()
 
-    def classify_and_update(self):
+    def fetch_and_classify(self,leads_collection):
         """To fetch the leads and run classification."""
-        print("Fetching lead data and classifying...")
-        return lead_classification_update()
+        print("Fetching lead data....")
+        leads_list = fetch_leads(leads_collection)
+        print("Classifying...")
+        leads = lead_classification_update(leads_list)
+        return leads
 
     def process_and_update(self, info):
         """Contains the method that makes api calls and fetches custom responses"""
@@ -36,9 +40,3 @@ class LeadGenerator:
         print("updating the database with custom responses")
         update_leads(merged_list)
         print("Successfully updated")
-
-if __name__ == "__main__":
-    my_obj = LeadGenerator()
-    my_obj.run()
-    lead_info = my_obj.classify_and_update()
-    my_obj.process_and_update(lead_info)

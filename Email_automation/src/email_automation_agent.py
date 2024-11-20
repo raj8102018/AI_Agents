@@ -1,15 +1,22 @@
 """This module contains the functionality of the agent packaged in a class """
-from gmail_integration import authenticate_gmail_api, batch_mail_initiation, batch_reply #pylint: disable=import-error
+
+from .gmail_integration import (
+    authenticate_gmail_api,
+    batch_mail_initiation,
+    batch_reply,
+)  # pylint: disable=import-error
+
 
 class EmailAutomation:
-    """This class contains the methods for all functions performed by the agent """
+    """This class contains the methods for all functions performed by the agent"""
+
     def __init__(self):
         pass
+
     def run(self):
         """This function starts the agent"""
         authenticate_gmail_api()
         print("Running Email Automation Agent...")
-
 
     def initiate_email(self):
         """This method calls the function that initiates the conversation"""
@@ -20,8 +27,3 @@ class EmailAutomation:
         """this methods calls the function that sends a batch of replies"""
         print("segregating mails and responding")
         batch_reply()
-
-if __name__ == "__main__":
-    my_obj = EmailAutomation()
-    my_obj.run()
-    my_obj.bulk_reply()

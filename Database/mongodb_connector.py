@@ -1,17 +1,16 @@
-"This module contains the functionality related to database integration for email automation and meet buddy agents"
+"Functionality related to database integration for email automation and meet buddy agents"
 # In mongodb_integration.py
 import sys
 import os
 import re
 from pymongo import MongoClient
 from pymongo import UpdateOne
-from bson.objectid import ObjectId
 
 
 # Add the parent directory to the Python path to access 'config'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from Config.settings import MONGODB_URI, MONGODB_DB_EMAIL, MONGODB_DB_LEAD #pylint: disable=wrong-import-position
+from Config.settings import MONGODB_URI, MONGODB_DB_EMAIL #pylint: disable=wrong-import-position
 
 def connect_to_mongodb():
     """This function makes the connection to mongodb"""
@@ -22,83 +21,45 @@ def connect_to_mongodb():
     db = client[MONGODB_DB_EMAIL]
 
     # Access the 'leads' collection
-    leads_collection = db['test_emails']
+    leads_collection = db['leads']
+    # leads_collection = db['test_emails']
+
 
     return leads_collection
     # return "connect successful"
 
-def connect_to_mongodb_lead_gen():
-    """This function contains the logic to connect to database"""
-    # Use the MongoDB URI from the settings
-    client = MongoClient(MONGODB_URI)
-    # Access the specific database
-    db = client[MONGODB_DB_LEAD]
 
-    # Access the 'leads' collection
-    leads_collection = db["leads"]
-
-    return leads_collection
-
-def fetch_leads():
+def fetch_leads(leads_collection):
     """This function fetches the leads"""
-    try:
-        leads_collection = connect_to_mongodb()
-        # Fetch documents where 'initial_contact' is 'No'
-        leads = leads_collection.find({
-            'Initial contact': {'$eq': 'No'},
-        })
-        leads_list = list(leads)  # Caution: consider cursor iteration if too many leads
-        return leads_list
-    except Exception as e: #pylint: disable=broad-exception-caught
-        print(f"Error fetching leads: {e}")
-        return []
+    # try:
+    # Fetch documents where 'initial_contact' is 'No'
+    leads = leads_collection.find({
+        "Initial contact": {"$in": ["No", "no"]},
+    })
+    leads_list = list(leads)  # Caution: consider cursor iteration if too many leads
+    return leads_list
+    # except Exception as e: #pylint: disable=broad-exception-caught
+    #     print(f"Error fetching leads: {e}")
+    #     return []
 
-def leads_for_initial_contact():
+def leads_for_initial_contact(leads_collection):
     """this function filters the leads that are yet to be contacted"""
-    leads_list = fetch_leads()
-    subject_regex = r"(?<=Subject:\s)(.*?)(?=\\n\\n)"
-    messagebody_regex = r"(?<=\\n\\n)(.*)"
+    leads_list = fetch_leads(leads_collection)
+    subject_regex = r"(?<=Subject:\s)(.*?)(?=\n\n)"
+    # messagebody_regex = r"(?<=\n\n)(.*)"
     mail_batch_initial = []
     for entry in leads_list:
         lead_details = {}
         lead_details['recepient'] = entry['Email']
         lead_details['subject'] = re.search(subject_regex, entry['outbound message']).group()
-        lead_details['content'] = re.search(messagebody_regex, entry['outbound message']).group()
+        # lead_details['content'] = re.search(messagebody_regex, entry['outbound message']).group()
+        lead_details['content'] = re.split(subject_regex, entry['outbound message'])[-1]
         mail_batch_initial.append(lead_details)
-    return mail_batch_initial
+    return mail_batch_initial,leads_list
 
 
-# Function to add a new lead to the database
-def add_new_leads(leads_list):
-    """This function adds new leads"""
-    leads_collection = connect_to_mongodb()
-
-    # Insert the list of new leads into the 'leads' collection
-    result = leads_collection.insert_many(leads_list)
-
-    # Print the IDs of the inserted documents
-    return result.inserted_ids
-
-def delete_leads(lead_id_list):
-    """This function deletes leads"""
-    leads_collection = connect_to_mongodb()
-
-    # Convert all lead IDs to ObjectId format
-    object_id_list = [ObjectId(lead_id) for lead_id in lead_id_list]
-
-    # Delete the leads with the specified IDs using $in operator
-    result = leads_collection.delete_many({'_id': {'$in': object_id_list}})
-
-    # Check how many documents were deleted
-    if result.deleted_count > 0:
-        print(f"{result.deleted_count} leads have been deleted.")
-    else:
-        print("No leads found with the specified IDs.")
-
-
-def update_leads(batch):
+def update_leads(batch,leads_collection):
     """This functioon updates the leads back"""
-    leads_collection = connect_to_mongodb()
 
     # Create a list to hold update operations
     operations = []
@@ -108,8 +69,8 @@ def update_leads(batch):
         operation = UpdateOne(
             {'_id': lead['_id']},  # Filter to match the lead's unique ID
             {'$set': {
-                'lead_type': lead['lead_type'],  # Set the lead_type field
-                'outbound message': lead['outbound message']  # Set the outbound message field
+                  # Set the lead_type field
+                'Initial contact': 'Yes'  # Set the outbound message field
             }}
         )
         operations.append(operation)  # Add the operation to the list
@@ -120,3 +81,6 @@ def update_leads(batch):
     else:
         result = None
     return result  # Return the result of the bulk write operation
+
+if __name__ == "__main__":
+    print(leads_for_initial_contact(connect_to_mongodb()))

@@ -3,6 +3,7 @@ This module contains data preprocessing related logic
 """
 # src/data_preprocessing.py
 import os
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 import pandas as pd  # pylint: disable=import-error # type: ignore
 import tensorflow as tf  # pylint: disable=import-error #os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import spacy  # type: ignore # pylint: disable=import-error
