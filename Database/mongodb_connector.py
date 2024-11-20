@@ -31,16 +31,16 @@ def connect_to_mongodb():
 
 def fetch_leads(leads_collection):
     """This function fetches the leads"""
-    try:
-        # Fetch documents where 'initial_contact' is 'No'
-        leads = leads_collection.find({
-            "Initial contact": {"$in": ["No", "no"]},
-        })
-        leads_list = list(leads)  # Caution: consider cursor iteration if too many leads
-        return leads_list
-    except Exception as e: #pylint: disable=broad-exception-caught
-        print(f"Error fetching leads: {e}")
-        return []
+    # try:
+    # Fetch documents where 'initial_contact' is 'No'
+    leads = leads_collection.find({
+        "Initial contact": {"$in": ["No", "no"]},
+    })
+    leads_list = list(leads)  # Caution: consider cursor iteration if too many leads
+    return leads_list
+    # except Exception as e: #pylint: disable=broad-exception-caught
+    #     print(f"Error fetching leads: {e}")
+    #     return []
 
 def leads_for_initial_contact(leads_collection):
     """this function filters the leads that are yet to be contacted"""
@@ -81,3 +81,6 @@ def update_leads(batch,leads_collection):
     else:
         result = None
     return result  # Return the result of the bulk write operation
+
+if __name__ == "__main__":
+    print(leads_for_initial_contact(connect_to_mongodb()))

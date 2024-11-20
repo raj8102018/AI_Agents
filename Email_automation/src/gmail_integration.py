@@ -1,8 +1,9 @@
 """
 This module contains the functionality related to gmail api integration
 """
-#pylint: disable=no-member
-#pylint: disable=import-error
+
+# pylint: disable=no-member
+# pylint: disable=import-error
 import sys
 import os
 import base64
@@ -15,15 +16,24 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from .langchain_integration import overall_simple_chain
-from .email_response_generation import get_batches,get_summary,generate_response
+from .langchain_integration import (
+    parallel_chain,
+    get_query_answer,
+    group_summaries_and_answers,
+    postquery_refinement_chain,
+)
+from .email_response_generation import get_batches, get_summary, generate_response
 
 
 # Add the parent directory to the Python path to access 'config'
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 
-from Database.mongodb_connector import leads_for_initial_contact, update_leads, connect_to_mongodb
+from Database.mongodb_connector import (
+    leads_for_initial_contact,
+    update_leads,
+    connect_to_mongodb,
+)
 
 
 # If modifying these scopes, delete the file token.json.
@@ -50,7 +60,7 @@ def authenticate_gmail_api():
             flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open("token.json", "w",encoding="utf-8") as token:
+        with open("token.json", "w", encoding="utf-8") as token:
             token.write(creds.to_json())
     return build("gmail", "v1", credentials=creds)
 
@@ -71,7 +81,9 @@ def gmail_send_message(sender, recepient, subject, content):
         create_message = {"raw": encoded_message}
 
         # Send the email
-        send_message = service.users().messages().send(userId="me", body=create_message).execute()
+        send_message = (
+            service.users().messages().send(userId="me", body=create_message).execute()
+        )
         print(f'Message Id: {send_message["id"]}')
     except HttpError as error:
         print(f"An error occurred: {error}")
@@ -96,10 +108,15 @@ def gmail_reply_message(details):
 
         # Encode the message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-        create_message = {"raw": encoded_message, "threadId": details["threadId"]}  # Thread ID
+        create_message = {
+            "raw": encoded_message,
+            "threadId": details["threadId"],
+        }  # Thread ID
 
         # Send the email
-        send_message = service.users().messages().send(userId="me", body=create_message).execute()
+        send_message = (
+            service.users().messages().send(userId="me", body=create_message).execute()
+        )
         print(f'Message Id: {send_message["id"]}')
     except HttpError as error:
         print(f"An error occurred: {error}")
@@ -123,7 +140,7 @@ def batch_mail_initiation(batch_size=1):
             print("sent..." + str(len(batch)))
         time.sleep(5)
     print("Changing contact status")
-    update_leads(leads_data_tuple[1],leads_collection)
+    update_leads(leads_data_tuple[1], leads_collection)
     print("successfully sent")
 
 
@@ -188,7 +205,9 @@ def show_chatty_threads():
         lengthy_threads = []
 
         for thread in threads:
-            tdata = service.users().threads().get(userId="me", id=thread["id"]).execute()
+            tdata = (
+                service.users().threads().get(userId="me", id=thread["id"]).execute()
+            )
             nmsgs = len(tdata["messages"])
             conversation = []
             only_received_msgs = []
@@ -271,33 +290,63 @@ def batch_reply():
             for entry in req_details
         ]
         batch = get_batches(response_parameters)
+
         first_data_input = {
             "input": json.dumps(batch)
         }  # Changed "first_entries" to "input"
-        follow_up_details = overall_simple_chain.run(first_data_input)
+        # print(first_data_input)
+        final_output = parallel_chain.invoke(first_data_input)
+        first_final_output = json.loads(final_output["first_thread"])
+        print(first_final_output)
+        print(first_final_output["Follow up Suggested"])
+        # print(final_output["second_thread"])
+        required_dict = final_output["second_thread"]
+        required_dict = json.loads(required_dict)
+        required_questions = str(required_dict["questions"])
+        output = get_query_answer.invoke(required_questions)
+        # print(output)
+        # print(type(output))
+        required_dict["answers"] = output["output_text"]
+        del required_dict["questions"]
+        grouped_output = group_summaries_and_answers(required_dict)
+        output_dict = postquery_refinement_chain.run({"entries": grouped_output})
+        final_output_dict = json.loads(output_dict)
+        print("\n\n\n\n\n")
+        print(f"final_output_dict - {final_output_dict}")
+        print(type(final_output_dict))
+        print(final_output_dict["Follow up Suggested"])
 
+        follow_up_details = (
+            first_final_output["Follow up Suggested"]
+            | final_output_dict["Follow up Suggested"]
+        )
+        scheduled_meet_details = (
+            first_final_output["Meeting Scheduled"]
+            | final_output_dict["Meeting Scheduled"]
+        )
+        recontact_needed_details = (
+            first_final_output["Recontact Needed"]
+            | final_output_dict["Recontact Needed"]
+        )
         print(follow_up_details)
-        prefix = r"```json(\n)*"
-        suffix = r"```(\n)*"
-
-        follow_up_details = re.sub(suffix + prefix, ",", follow_up_details)
-        follow_up_details = re.sub(prefix, "[", follow_up_details)
-        follow_up_details = re.sub(suffix, "]", follow_up_details)
-
-        follow_up_details_arr = json.loads(follow_up_details)
-        # dict_to_schedule = follow_up_details_arr[1]
-        # dict_followups = follow_up_details_arr[0]
+        follow_up_details_arr = [
+            scheduled_meet_details,
+            recontact_needed_details,
+            follow_up_details,
+        ]
 
         service = authenticate_gmail_api()
         for idx, entry in enumerate(req_details, start=1):
             if str(idx) in follow_up_details_arr[2].keys():
                 # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
-                details = {"master_email":entry["master_email"],
-                    "recepient":entry["recepient"],
-                    "subject":entry["subject"],
-                    "content":follow_up_details_arr[2][str(idx)],
-                    "message_id":entry["message_id"],
-                    "threadId":entry["threadId"]}
+                details = {
+                    "master_email": entry["master_email"],
+                    "recepient": entry["recepient"],
+                    "subject": entry["subject"],
+                    "content": follow_up_details_arr[2][str(idx)],
+                    "message_id": entry["message_id"],
+                    "threadId": entry["threadId"],
+                }
                 gmail_reply_message(details)
                 service.users().threads().modify(
                     userId="me", id=entry["threadId"], body=post_data
