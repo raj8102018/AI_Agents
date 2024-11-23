@@ -64,13 +64,29 @@ def generate_response(batch):
 
         # Make your first request to generate text
         response = model.generate_content(prompt)
+        
+        print(response.text)
 
+        if not response.text:
+            raise ValueError("The model response is empty.")
+        
         generated_content = response.text.split("Lead")
-        for idx, message in enumerate(
-            generated_content[1:], start=0
-        ):  # Skipping the empty first split
-            batch[idx]["outbound message"] = "Lead" + message.replace('**','').strip()
-        return batch
+        if len(generated_content[1:]) != len(batch):
+            raise ValueError("Mismatch between generated messages and leads.")
+
+        for idx, message in enumerate(generated_content[1:], start=0):
+            batch[idx]["outbound message"] = "Lead" + message.replace('**', '').strip()
+
+        # Assign default message for any leads without an outbound message
+        for lead in batch:
+            if "outbound message" not in lead:
+                lead["outbound message"] = "No outbound message generated."
+
+        # for idx, message in enumerate(
+        #     generated_content[1:], start=0
+        # ):  # Skipping the empty first split
+        #     batch[idx]["outbound message"] = "Lead" + message.replace('**','').strip()
+        # return batch
 
     except HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")
@@ -87,7 +103,9 @@ def generate_response(batch):
 # loop through each batch and update the leads
 def batch_processing(batches_to_process):
     """This function processes the batches in time intervals"""
+    print("batch_processing started")
     for batch in batches_to_process:
+        print("going into generate_response")
         batch = generate_response(batch)
         time.sleep(10)
     return batches_to_process

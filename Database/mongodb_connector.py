@@ -45,13 +45,16 @@ def fetch_leads(leads_collection):
 def leads_for_initial_contact(leads_collection):
     """this function filters the leads that are yet to be contacted"""
     leads_list = fetch_leads(leads_collection)
-    subject_regex = r"(?<=Subject:\s)(.*?)(?=\n\n)"
+    subject_regex = r"(?<=[sS]ubject:\s)(.*?)(?=\n\n)"
     # messagebody_regex = r"(?<=\n\n)(.*)"
     mail_batch_initial = []
     for entry in leads_list:
         lead_details = {}
         lead_details['recepient'] = entry['Email']
-        lead_details['subject'] = re.search(subject_regex, entry['outbound message']).group()
+        subject_str = re.search(subject_regex, entry['outbound message'])
+        if subject_str:
+            subject_str = subject_str.group()
+        lead_details['subject'] = subject_str
         # lead_details['content'] = re.search(messagebody_regex, entry['outbound message']).group()
         lead_details['content'] = re.split(subject_regex, entry['outbound message'])[-1]
         mail_batch_initial.append(lead_details)

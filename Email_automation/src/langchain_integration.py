@@ -34,7 +34,7 @@ llm = ChatGoogleGenerativeAI(
 )
 
 # Define the first prompt template
-first_prompt = PromptTemplate.from_template(
+first_prompt = PromptTemplate.from_template( 
     "You are given email conversation threads between a client and a business sales executive."
     "Here are the entries: {input}."
     "Each entry includes a subject line providing context, a message exchange between the two parties, and a date."
@@ -50,10 +50,11 @@ first_prompt = PromptTemplate.from_template(
     "If not, set 'has_query': false."
     "A 'Last message received on' field with [date] from the provided data.'"
     "For context, your name is Yuvraj, and your company is QState."
-    "The two json objects should have the following format: 'with_queries' field having entries with queries and 'without_queries' field with remaiing entries"
+    "The two json objects should have the following format: 'with_queries' field having entries with queries i.e 'has_query': true and 'without_queries' i.e 'has_query': false field with remaiing entries"
     "wrap both the json objects in a value with key 'summaries'"
     "Ensure the output is plain JSON without any Markdown formatting or code block delimiters."
     "pack all the data as a value with key 'summaries'"
+    "Strictly follow the guidelines about segregating the emails into with and without queries"
 )
 
 refinement_prompt = PromptTemplate.from_template(
@@ -138,6 +139,7 @@ postquery_refinement_chain = LLMChain(llm=llm, prompt=postquery_refinement_promp
 @chain
 def get_query_answer(questions, company="QState"):
     "get answer from document for the query"
+    print("fetching answers")
     url = "http://127.0.0.1:5000/api/answer"
     data = {"question": questions, "file_name": f"{company}.pdf"}
 
