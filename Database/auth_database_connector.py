@@ -3,6 +3,7 @@ This module contains the functionality for database and authentication code
 """
 import os
 import sys
+from bson.objectid import ObjectId
 from flask import Flask, jsonify, request, g # g is used to store global data for the request #pylint: disable=unused-import
 from flask_cors import CORS  # For enabling CORS
 from pymongo import MongoClient
@@ -52,6 +53,12 @@ def get_user_by_username(username):
     leads_collection = get_mongo_collection()
     return leads_collection.find_one({"username": username})
 
+def get_user_by_id(id):
+    """helper function to get user by username"""
+    leads_collection = get_mongo_collection()
+    user = leads_collection.find_one({"_id": ObjectId(id)})
+    user["_id"] = str(user["_id"])
+    return user
 
 def verify_password(stored_password, provided_password):
     """helper function to verify password"""
@@ -81,12 +88,14 @@ def create_user(first_name, last_name, user_name, email, password):
 def create_guser(name, email):
     """"function to add user authenticated via google"""
     leads_collection = get_mongo_collection()
-    if get_user_by_email(email):
-        return False  # User already exists
+    user = get_user_by_email(email)
+    if user:
+        return user  # User already exists
     user = {
         "email": email,
         "name": name,
         "oauth_provider": "google",  # Optional field to store OAuth provider
     }
     leads_collection.insert_one(user)
-    return True
+    user = get_user_by_email(email)
+    return user

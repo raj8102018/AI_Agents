@@ -3,10 +3,14 @@ This module contains the functionality related to different routes
 """
 #pylint: disable=missing-timeout
 #pylint: disable=import-error
-import os
+import os, random, string
 import sys
 import json
 import requests
+import jwt
+
+from functools import wraps
+from datetime import datetime, timezone, timedelta, UTC
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, redirect, url_for, session
 from flask_cors import CORS  # For enabling CORS
@@ -18,11 +22,13 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "src")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from Config.settings import secretkey, clientid_auth, clientsecret_auth #pylint: disable=wrong-import-position
-from Database.auth_database_connector import create_user, get_user_by_email, get_user_by_username, verify_password, create_guser # pylint: disable=line-too-long
+from Database.auth_database_connector import create_user, get_user_by_email, get_user_by_username, get_user_by_id, verify_password, create_guser # pylint: disable=line-too-long
 
 
 load_dotenv()
 
+# SECRET_KEY = ''.join(random.choice( string.ascii_lowercase  ) for i in range( 32 ))
+SECRET_KEY = 'FCUK'
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -36,6 +42,40 @@ GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configura
 
 # OAuth 2 client setup
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
+
+def token_required(func):
+
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        token = None
+        # print(token)
+
+        if "authorization" in request.headers:
+            token = request.headers["authorization"]
+        # print(token)
+        # data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        # try:
+        print("before decoding token")
+        data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        print(data)
+        expiry = data["expire_time"]
+        print(expiry)
+        format_date = "%Y-%m-%d %H:%M:%S.%f%z"
+        expiry_date = datetime.strptime(expiry, format_date)
+        if datetime.now(UTC) > expiry_date:
+            print("token expired")
+            return {"success": False, "msg": "Token Expired"}, 400
+        else:
+            print("token is valid and time left:")
+            print(expiry_date - datetime.now(UTC))
+            
+        # except:
+        #     return {"success": False, "msg": "Token is invalid"}, 400
+        
+        return func(*args, **kwargs)
+
+    return decorator
+
 
 
 def get_google_provider_cfg():
@@ -104,15 +144,19 @@ def callback():
         user = get_user_by_email(email)  # Check if user exists in your database
         if not user:
             # If user doesn't exist, create the user
-            create_guser(
+            user = create_guser(
                 name, email
             )  # Define a create_user function to add the user to MongoDB
 
         # Log the user in (you can set session variables, etc.)
+        
+        
+        token = jwt.encode({'email': user["email"], 'expire_time': str(datetime.now(UTC) + timedelta(minutes=30))}, SECRET_KEY)
+        user["token"] = token
         session["user"] = email
-
+        user["_id"] = str(user["_id"])
         return (
-            jsonify({"message": "Login successful!", "email": email, "name": name}),
+            jsonify(user),
             200,
         )
     return (
@@ -120,6 +164,53 @@ def callback():
             400,
         )
 
+
+@app.route("/google_login", methods=['POST'])
+def goodle_login():
+    auth_code = request.get_json()['code']
+
+    data = {
+        'code': auth_code,
+        'client_id': GOOGLE_CLIENT_ID,  # client ID from the credential at google developer console
+        'client_secret': GOOGLE_CLIENT_SECRET,  # client secret from the credential at google developer console
+        'redirect_uri': 'postmessage',
+        'grant_type': 'authorization_code'
+    }
+
+    response = requests.post('https://oauth2.googleapis.com/token', data=data).json()
+    headers = {
+        'Authorization': f'Bearer {response["access_token"]}'
+    }
+    user_info = requests.get('https://www.googleapis.com/oauth2/v3/userinfo', headers=headers).json()
+
+    """
+        check here if user exists in database, if not, add him
+    """
+    # print(user_info)
+    # return jsonify(user_info)
+    if user_info.get("email_verified"):
+        email = user_info["email"]
+        name = user_info["name"]
+
+        # Create a user in your database using their email or check if they already exist
+        user = get_user_by_email(email)  # Check if user exists in your database
+        if not user:
+            # If user doesn't exist, create the user
+            user = create_guser(
+                name, email
+            )  # Define a create_user function to add the user to MongoDB
+
+        # Log the user in (you can set session variables, etc.)
+        
+        
+        token = jwt.encode({'email': user["email"], 'expire_time': str(datetime.now(UTC) + timedelta(minutes=30))}, SECRET_KEY)
+        user["token"] = token
+        session["user"] = email
+        user["_id"] = str(user["_id"])
+        return (
+            jsonify(user),
+            200,
+        )
 
 @app.route("/logout")
 def logout():
@@ -163,29 +254,67 @@ def get_home():
 @app.route("/esign_in", methods=["POST"])
 def sign_in():
     """route handler for manual signin"""
-    data = request.get_json()
-    email = data.get("email")
+    data     = request.get_json()
+    email    = data.get("email")
     username = data.get("username")
     password = data.get("password")
 
     print(username)
 
-    user_by_email = get_user_by_email(email)
-    user_by_username = get_user_by_username(username)
-    if user_by_email:
-        if verify_password(
-            user_by_email["password"], password
-        ):  # Check the stored password hash
-            return jsonify({"message": "Sign-in successful!"}), 200
-        return jsonify({"error": "Invalid password!"}), 401  # Incorrect password
-    if user_by_username:
-        if verify_password(
-            user_by_username["password"], password
-        ):  # Check the stored password hash
-            return jsonify({"message": "Sign-in successful!!"}), 200
-        return jsonify({"error": "Invalid password!"}), 401  # Incorrect password
+    user = {}
+    if email == None:
+        user = get_user_by_username(username)
+    else:
+        user = get_user_by_email(email)
+    if not user:
+        return jsonify({"error": "User does not exist!"}), 404
+    if verify_password(user["password"], password):
+        token = jwt.encode({'email': user["email"], 'expire_time': str(datetime.now(UTC) + timedelta(minutes=30))}, SECRET_KEY)
+        user["message"] = "Sign-in successful!"
+        session["token"]= token
+        user["token"]= token
+        user["_id"]     = str(user["_id"])
+        # user["session"] = session
+        # print(user)
+        if 'token' in session:
+            print('token in session found')
+        else:
+            print('token in session not found')
+        return jsonify(user), 200
     return jsonify({"error": "User does not exist!"}), 404
+
+    # if user_by_email:
+    #     if verify_password(
+    #         user_by_email["password"], password
+    #     ):  # Check the stored password hash
+    #         return jsonify({"message": "Sign-in successful!"}), 200
+    #     return jsonify({"error": "Invalid password!"}), 401  # Incorrect password
+    # if user_by_username:
+    #     if verify_password(
+    #         user_by_username["password"], password
+    #     ):
+            
+
+    #         # Check the stored password hash
+    #         return jsonify({
+    #             "message": "Sign-in successful!!",
+    #             "token"  : token
+    #             }), 200
+    #     return jsonify({"error": "Invalid password!"}), 401  # Incorrect password
+    # return jsonify({"error": "User does not exist!"}), 404
+
+# API Route for signing in (still incomplete)
+# @token_required
+@app.route("/profile/<user_id>", methods=["GET"])
+@token_required
+def get_user(user_id):
+    """route handler for manual signin"""
+
+    return get_user_by_id(user_id)
 
 
 if __name__ == "__main__":
-    app.run(ssl_context="adhoc", debug=True)
+    # app.run(debug=True)
+    
+    app.run(ssl_context=('example.com+5.pem', 'example.com+5-key.pem'), debug=True)
+    # app.run(ssl_context="adhoc", debug=True)
