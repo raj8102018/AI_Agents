@@ -35,8 +35,11 @@ class LeadGenerator:
         """Contains the method that makes api calls and fetches custom responses"""
         print("processing lead data and crafting custom messages...")
         batches = get_batches(info)
+        print("get batches info working")
+        print(f"batches:{batches}")
         batches = batch_processing(batches)
         merged_list = [item for sublist in batches for item in sublist]
+        print(f"merged list : {merged_list}")
         print("updating the database with custom responses")
         update_leads(merged_list)
         print("Successfully updated")

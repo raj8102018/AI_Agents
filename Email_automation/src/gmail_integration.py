@@ -276,6 +276,25 @@ def show_chatty_threads():
         print(f"An error occurred: {error}")
 
 
+def find_key_in_dict(data, target_key):
+    """
+    Recursively searches for a specific key in a dictionary or nested dictionaries.
+    """
+    if not isinstance(data, dict):
+        return None
+
+    # Check if the key exists at the current level
+    if target_key in data:
+        return data[target_key]
+
+    # Recursively search in nested dictionaries
+    for key, value in data.items():
+        if isinstance(value, dict):
+            result = find_key_in_dict(value, target_key)
+            if result is not None:
+                return result
+
+
 def batch_reply():
     """To respond to the unread emails in batches"""
     post_data = {"addLabelIds": [], "removeLabelIds": ["UNREAD"]}
@@ -296,6 +315,7 @@ def batch_reply():
         }  # Changed "first_entries" to "input"
         # print(first_data_input)
         final_output = parallel_chain.invoke(first_data_input)
+        print(f"final output: {final_output}")
         first_final_output = json.loads(final_output["first_thread"])
         print(first_final_output)
         print(first_final_output["Follow up Suggested"])
@@ -304,9 +324,9 @@ def batch_reply():
         required_dict = json.loads(required_dict)
         required_questions = str(required_dict["questions"])
         output = get_query_answer.invoke(required_questions)
-        # print(output)
+        print(output)
         # print(type(output))
-        required_dict["answers"] = output["output_text"]
+        required_dict["answers"] = find_key_in_dict(output,'output_text')
         del required_dict["questions"]
         grouped_output = group_summaries_and_answers(required_dict)
         output_dict = postquery_refinement_chain.run({"entries": grouped_output})
