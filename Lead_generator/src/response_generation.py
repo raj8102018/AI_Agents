@@ -49,9 +49,11 @@ def generate_response(batch):
     "to the executive, introducing AI integration solutions to streamline their business processes. "
     f"Here are the details:\n\n{formatted_batch}"
     "For each lead, respond with a professional outbound message in the following format:\n"
-    "For context, your name is Yuvraj, and your company is QState."
+    "For context, your name is Yuvraj, and your company is QState. You are the sales executive. You are writing an outbound message to the client"
+    ""
     "Subject: [Subject Line]\n"
     "[Message body]"
+    "Do not include any placeholders, Remember you are the person reaching out to a clien"
     )
 
 
@@ -64,16 +66,19 @@ def generate_response(batch):
 
         # Make your first request to generate text
         response = model.generate_content(prompt)
-        
+        print('-----------------')
         print(response.text)
+        print('-----------------')
 
         if not response.text:
             raise ValueError("The model response is empty.")
         
         generated_content = response.text.split("Lead")
+        if len(generated_content) == 1:
+            generated_content.insert(0, "**")
         if len(generated_content[1:]) != len(batch):
             raise ValueError("Mismatch between generated messages and leads.")
-
+        # raise ValueError("No Mismatch between generated messages and leads.")
         for idx, message in enumerate(generated_content[1:], start=0):
             batch[idx]["outbound message"] = "Lead" + message.replace('**', '').strip()
 
@@ -86,7 +91,7 @@ def generate_response(batch):
         #     generated_content[1:], start=0
         # ):  # Skipping the empty first split
         #     batch[idx]["outbound message"] = "Lead" + message.replace('**','').strip()
-        # return batch
+        return batch
 
     except HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")

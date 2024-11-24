@@ -10,8 +10,8 @@ sys.path.append(
 )
 
 # orchestrator/orchestrator.py
-from lead_generator.src.lead_generator_agent import LeadGenerator
-from email_automation.src.email_automation_agent import EmailAutomation
+from Lead_generator.src.lead_generator_agent import LeadGenerator
+from Email_automation.src.email_automation_agent import EmailAutomation
 
 
 class Orchestrator:

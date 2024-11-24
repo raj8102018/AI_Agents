@@ -68,8 +68,9 @@ refinement_prompt = PromptTemplate.from_template(
     "3. **Follow up Suggested**: For all remaining entries, carefully generate a follow up email acknowledging the client’s interest, restating key points, and requesting their availability for further discussion.For greeting questions, include the polite response. if the client has declined the offer, generate a polite closing message. Add these to the 'Follow up Suggested' json object, with the entry ID as the key and the generated email body as the value. Do not return the subject. for your context, you are 'yuvraj, the sales executive'\n\n"
     "Ensure each entry is assigned to **only one** category, based on the first applicable rule: prioritize 'Meeting Scheduled' over 'Recontact Needed,' and 'Recontact Needed' over 'Follow up Suggested.'\n\n"
     "Return only these three json objects in this exact order with the content: 1, 2, and 3. "
+    "Do not include any place holders or mention that you have attached anything with the response"
     "Return only the json objects directly, without any category labels or additional text."
-    "Ensure the output is plain json without any Markdown formatting or code block delimiters."
+    "Strictly Ensure the output is plain json without any Markdown formatting or code block delimiters."
 )
 llm_chain_summary = LLMChain(llm=llm, prompt=first_prompt)
 
@@ -113,6 +114,7 @@ postquery_refinement_prompt = PromptTemplate.from_template(
     "Return the output in the following format: "
     "Each entry includes a conversation summary followed by answer to the quesiton in it."
     "Your task is go through each and every entry along with the answer, even if the client has declined the offer, generate a polite closing message. For other entries, generate a follow up email acknowledging the client’s interest, restating key points, and requesting their availability for further discussion. Add these to the 'Follow up Suggested' JSON object, with the entry ID as the key and the generated email body as the value. for your context, you are 'yuvraj, the sales executive'. Do not return the subject\n\n"
+    "Make sure to include the answer provided"
     "Return three json objects in this exact order:"
     "1. **Meeting Scheduled**: empty json"
     "2. **Recontact Needed**: empty json"
@@ -120,6 +122,7 @@ postquery_refinement_prompt = PromptTemplate.from_template(
     "Return the JSON objects directly, without any category labels or additional text."
     "Ensure the output is plain JSON without any Markdown formatting or code block delimiters or new line characters. For context"
     "Return only the json directly, without any category labels or additional text."
+    "Do not include any place holders or mention that you have attached anything with the response"
     "Ensure the output is plain json without any Markdown formatting or code block delimiters."
     "Ensure response to all the items in the {entries}"
     "pack all the three json items in a json"

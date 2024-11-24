@@ -1,6 +1,10 @@
 *kindly check other branches for the recent work
 
 # Agency Swarm - Automated AI Agents for Business Development
+### No License
+This project is shared for viewing purposes only. 
+You are not permitted to copy, modify, distribute, or use this code without explicit permission from the author.
+
 
 ## Project Title and Description
 **Project Name**: Agency Swarm - Automated AI Agents for Business Processes  
