@@ -10,7 +10,7 @@ from pymongo import UpdateOne
 # Add the parent directory to the Python path to access 'config'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from Config.settings import MONGODB_URI, MONGODB_DB_EMAIL #pylint: disable=wrong-import-position
+from Config.settings import MONGODB_URI, MONGODB_DB #pylint: disable=wrong-import-position
 
 def connect_to_mongodb():
     """This function makes the connection to mongodb"""
@@ -18,7 +18,7 @@ def connect_to_mongodb():
     client = MongoClient(MONGODB_URI)
 
     # Access the specific database
-    db = client[MONGODB_DB_EMAIL]
+    db = client[MONGODB_DB]
 
     # Access the 'leads' collection
     leads_collection = db['leads']

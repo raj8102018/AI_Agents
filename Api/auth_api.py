@@ -23,7 +23,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from Config.settings import secretkey, clientid_auth, clientsecret_auth #pylint: disable=wrong-import-position
 from Database.auth_database_connector import create_user, get_user_by_email, get_user_by_username, get_user_by_id, verify_password, create_guser # pylint: disable=line-too-long
-
+from Database.lead_generator_connector import update_frequency
+from Database.rag_connector import store_pdf_in_mongodb
 
 load_dotenv()
 
@@ -260,12 +261,15 @@ def sign_in():
     password = data.get("password")
 
     print(username)
+    print(data)
 
     user = {}
     if email == None:
         user = get_user_by_username(username)
     else:
         user = get_user_by_email(email)
+    print("user down below")
+    print(user)
     if not user:
         return jsonify({"error": "User does not exist!"}), 404
     if verify_password(user["password"], password):
@@ -280,6 +284,7 @@ def sign_in():
             print('token in session found')
         else:
             print('token in session not found')
+        print(user)
         return jsonify(user), 200
     return jsonify({"error": "User does not exist!"}), 404
 
@@ -311,6 +316,58 @@ def get_user(user_id):
     """route handler for manual signin"""
 
     return get_user_by_id(user_id)
+
+@app.route("/upload_files", methods=["POST"])
+def upload_files():
+    try:
+        # Check if files are in the request
+        if not request.files:
+            return jsonify({"error": "Missing file(s) in request"}), 400
+        pdf_file = None
+        excel_file = None
+        
+        for key, file in request.files.items():
+            if file.filename.endswith('.pdf'):
+                pdf_file = file
+            elif file.filename.endswith(('.xls', '.xlsx', '.csv')):
+                excel_file = file
+        
+        if not pdf_file or not excel_file:
+            return jsonify({"error": "Missing required file(s). PDF and Excel are required."}), 400
+         
+        frequency = request.form.get('frequency')
+        user_id = request.form.get('user_id')
+
+        # Validate form fields
+        if not frequency or not user_id:
+            return jsonify({"error": "Missing form data"}), 400
+
+        # Save the uploaded files
+        # pdf_path = os.path.join(UPLOAD_FOLDER, pdf_file.filename)
+        # excel_path = os.path.join(UPLOAD_FOLDER, excel_file.filename)
+        # pdf_file.save(pdf_path)
+        # excel_file.save(excel_path)
+
+        # Simulate processing or saving other form data if needed
+        # print(f"PDF saved at: {pdf_path}")
+        # print(f"Excel saved at: {excel_path}")
+        print(f"Frequency: {frequency}")
+        print(f"User ID: {user_id}")
+        
+        update_frequency(user_id,frequency)
+        store_pdf_in_mongodb(user_id,pdf_file)
+        # Respond to the client
+        return jsonify({
+            "message": "Files uploaded successfully",
+            # "pdf_path": pdf_path,
+            # "excel_path": excel_path,
+            "frequency": frequency,
+            "user_id": user_id
+        }), 200
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while processing your request"}), 500
 
 
 if __name__ == "__main__":
