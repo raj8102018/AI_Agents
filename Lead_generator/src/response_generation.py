@@ -7,6 +7,7 @@ import time
 from dotenv import load_dotenv
 import google.generativeai as genai
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException # pylint: disable=redefined-builtin
+from .lead_generator_prompts import outbound_prompt
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "src")))
 
@@ -30,7 +31,6 @@ def get_batches(data, batch_size=10):
 # Load environment variables from .env file
 load_dotenv()
 
-
 def generate_response(batch):
     """This function makes the api call and formats the response into the required format"""
     # Format the batch into readable text for the prompt
@@ -44,18 +44,7 @@ def generate_response(batch):
 			f"Industry: {lead['Industry']}\n\n"
 		)
 
-    prompt = (
-    f"You are given a batch of {len(batch)} leads. For each lead, generate a personalized outbound message "
-    "to the executive, introducing AI integration solutions to streamline their business processes. "
-    f"Here are the details:\n\n{formatted_batch}"
-    "For each lead, respond with a professional outbound message in the following format:\n"
-    "For context, your name is Yuvraj, and your company is QState. You are the sales executive. You are writing an outbound message to the client"
-    ""
-    "Subject: [Subject Line]\n"
-    "[Message body]"
-    "Do not include any placeholders, Remember you are the person reaching out to a clien"
-    )
-
+    prompt = outbound_prompt
 
     try:
         # Configure the API key
