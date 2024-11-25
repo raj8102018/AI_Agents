@@ -21,7 +21,9 @@ class LeadGenerator:
     def run(self):
         """Indicates the start of the agent."""
         print("Running Lead Generation Agent...")
-        return connect_to_mongodb()
+        database = connect_to_mongodb()
+        leads_collection = database["leads"]
+        return leads_collection
 
     def fetch_and_classify(self,leads_collection):
         """To fetch the leads and run classification."""
