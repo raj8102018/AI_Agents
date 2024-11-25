@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # Add the parent directory to the Python path to access 'config'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from Config.settings import MONGODB_URI, MONGODB_DB_AUTH #pylint: disable=wrong-import-position
+from Config.settings import MONGODB_URI, MONGODB_DB #pylint: disable=wrong-import-position
 
 
 # Initialize Flask app
@@ -30,7 +30,7 @@ def get_mongo_client():
 def get_mongo_collection():
     """Function to access mongodb collection"""
     client = get_mongo_client()
-    db = client[MONGODB_DB_AUTH]
+    db = client[MONGODB_DB]
     return db["users"]
 
 

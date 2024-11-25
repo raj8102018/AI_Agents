@@ -34,7 +34,8 @@ load_dotenv()
 def generate_response(batch):
     """This function makes the api call and formats the response into the required format"""
     # Format the batch into readable text for the prompt
-    formatted_batch = ""
+    batch_len = len(batch)
+    formatted_batch = f"you are given a batch of {batch_len} leads as follows :"
     for idx, lead in enumerate(batch):
         formatted_batch += (
 			f"Lead {idx + 1}:\n"
@@ -44,7 +45,7 @@ def generate_response(batch):
 			f"Industry: {lead['Industry']}\n\n"
 		)
 
-    prompt = outbound_prompt
+    prompt = formatted_batch + outbound_prompt
 
     try:
         # Configure the API key

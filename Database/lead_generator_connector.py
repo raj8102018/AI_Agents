@@ -5,26 +5,26 @@ import sys
 import os
 from pymongo import MongoClient
 from pymongo import UpdateOne
+from bson.objectid import ObjectId
 
 
 # Add the root directory to the Python path to access 'config'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-from Config.settings import MONGODB_URI, MONGODB_DB_LEAD
-
+from Config.settings import MONGODB_URI, MONGODB_DB
 
 def connect_to_mongodb():
     """This function contains the logic to connect to database"""
     # Use the MongoDB URI from the settings
     client = MongoClient(MONGODB_URI)
     # Access the specific database
-    db = client[MONGODB_DB_LEAD]
+    db = client[MONGODB_DB]
+    return db
 
-    # Access the 'leads' collection
-    leads_collection = db["leads"]
-
-    return leads_collection
+# def get_users_collection():
+#     db = connect_to_mongodb()
+#     return db['users']
 
 
 def fetch_leads(leads_collection):
@@ -43,7 +43,8 @@ def fetch_leads(leads_collection):
 
 def update_leads(batch):
     "This function contains logic to update the leads in the database"
-    leads_collection = connect_to_mongodb()
+    database = connect_to_mongodb()
+    leads_collection = database["leads"]
 
     # Create a list to hold update operations
     operations = []
@@ -71,6 +72,18 @@ def update_leads(batch):
 
     return result  # Return the result of the bulk write operation
 
+def update_frequency(user_id,frequency):
+    "This function contains logic to update the frequency in the database"
+    database = connect_to_mongodb()
+    user_collection = database["users"]
+
+    # Perform the update operation
+    result = user_collection.update_one(
+        {"_id": ObjectId(user_id)},  # Filter to match the lead's unique ID
+        {"$set": {"frequency": int(frequency)}},  # Update the frequency field
+    )
+    return result.raw_result
+
 def add_new_leads(leads_list,leads_collection):
     """This function contains the logic to add a new lead to the database"""
 
@@ -85,7 +98,8 @@ def add_new_leads(leads_list,leads_collection):
 
 def delete_leads(lead_id_list):
     """This function contains the logic to delete leads in the database"""
-    leads_collection = connect_to_mongodb()
+    database = connect_to_mongodb()
+    leads_collection = database["leads"]
 
     # Input all lead IDs in ObjectId format as below
     #[ObjectId('672df04fc86cdfbe0242d5e0'), ObjectId('672df04fc86cdfbe0242d5e1')]
