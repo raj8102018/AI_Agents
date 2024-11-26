@@ -31,20 +31,20 @@ class Orchestrator:
         print("Starting Orchestrator...")
 
         # Step 1: Run Lead Classification Agent
-        # leads_collection = self.agents["lead_classification"].run(self)
+        leads_collection = self.agents["lead_classification"].run(self)
 
-        # leads = self.agents["lead_classification"].fetch_and_classify(
-        #     self, leads_collection
-        # )
+        leads = self.agents["lead_classification"].fetch_and_classify(
+            self, leads_collection
+        )
 
-        # self.agents["lead_classification"].process_and_update(self, leads)
+        self.agents["lead_classification"].process_and_update(self, leads)
 
         # Step 2: Run Email Automation Agent
-        # self.agents["email_automation"].run(self)
+        self.agents["email_automation"].run(self)
 
         self.agents["email_automation"].initiate_email(self)
 
-        # self.agents["email_automation"].bulk_reply(self)
+        self.agents["email_automation"].bulk_reply(self)
 
         print("Orchestrator finished execution.")
 
