@@ -70,12 +70,14 @@ postquery_refinement_chain = LLMChain(llm=llm, prompt=postquery_refinement_promp
 def get_query_answer(questions, company="QState"):
     "get answer from document for the query"
     print("fetching answers")
-    url = "http://127.0.0.1:5000/api/answer"
+    url = "http://127.0.0.1:9090/api/answer"
     data = {"question": questions, "file_name": f"{company}.pdf"}
 
     response = requests.post(url, json=data)
 
     if response.status_code == 200:
+        print("it is working")
+        print(response.json())
         return response.json()
     return ("Failed:", response.status_code, response.text)
 

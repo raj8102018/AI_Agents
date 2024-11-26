@@ -321,67 +321,67 @@ def batch_reply():
             first_final_output = final_output["first_thread"]
         elif isinstance(final_output, str):
             first_final_output = json.loads(final_output["first_thread"])
-        print(first_final_output)
+        print(f"first_final_output : {first_final_output}")
         print(type(first_final_output))
         if isinstance(first_final_output, dict):
             first_final_output = final_output["first_thread"]
         elif isinstance(first_final_output, str):
             first_final_output = json.loads(final_output["first_thread"])
-        print(first_final_output["Follow up Suggested"])
-        # # print(final_output["second_thread"])
-        # required_dict = final_output["second_thread"]
-        # required_dict = json.loads(required_dict)
-        # required_questions = str(required_dict["questions"])
-        # output = get_query_answer.invoke(required_questions)
-        # print(output)
-        # # print(type(output))
-        # required_dict["answers"] = find_key_in_dict(output,'output_text')
-        # del required_dict["questions"]
-        # grouped_output = group_summaries_and_answers(required_dict)
-        # output_dict = postquery_refinement_chain.run({"entries": grouped_output})
-        # final_output_dict = json.loads(output_dict)
-        # print("\n\n\n\n\n")
-        # print(f"final_output_dict - {final_output_dict}")
-        # print(type(final_output_dict))
-        # print(final_output_dict["Follow up Suggested"])
+        print(f"first_final_output: {first_final_output["Follow up Suggested"]}")
+        print(final_output["second_thread"])
+        required_dict = final_output["second_thread"]
+        required_dict = json.loads(required_dict)
+        required_questions = str(required_dict["questions"])
+        output = get_query_answer.invoke(required_questions)
+        print(output)
+        print(type(output))
+        required_dict["answers"] = find_key_in_dict(output,'output_text')
+        del required_dict["questions"]
+        grouped_output = group_summaries_and_answers(required_dict)
+        output_dict = postquery_refinement_chain.run({"entries": grouped_output})
+        final_output_dict = json.loads(output_dict)
+        print("\n\n\n\n\n")
+        print(f"final_output_dict - {final_output_dict}")
+        print(type(final_output_dict))
+        print(f"final output dict: {final_output_dict["Follow up Suggested"]}")
 
-        # follow_up_details = (
-        #     first_final_output["Follow up Suggested"]
-        #     | final_output_dict["Follow up Suggested"]
-        # )
-        # scheduled_meet_details = (
-        #     first_final_output["Meeting Scheduled"]
-        #     | final_output_dict["Meeting Scheduled"]
-        # )
-        # recontact_needed_details = (
-        #     first_final_output["Recontact Needed"]
-        #     | final_output_dict["Recontact Needed"]
-        # )
-        # print(follow_up_details)
-        # follow_up_details_arr = [
-        #     scheduled_meet_details,
-        #     recontact_needed_details,
-        #     follow_up_details,
-        # ]
+        follow_up_details = (
+            first_final_output["Follow up Suggested"]
+            | final_output_dict["Follow up Suggested"]
+        )
+        scheduled_meet_details = (
+            first_final_output["Meeting Scheduled"]
+            | final_output_dict["Meeting Scheduled"]
+        )
+        recontact_needed_details = (
+            first_final_output["Recontact Needed"]
+            | final_output_dict["Recontact Needed"]
+        )
+        print(follow_up_details)
+        follow_up_details_arr = [
+            scheduled_meet_details,
+            recontact_needed_details,
+            follow_up_details,
+        ]
 
-        # service = authenticate_gmail_api()
-        # for idx, entry in enumerate(req_details, start=1):
-        #     if str(idx) in follow_up_details_arr[2].keys():
-        #         # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
-        #         details = {
-        #             "master_email": entry["master_email"],
-        #             "recepient": entry["recepient"],
-        #             "subject": entry["subject"],
-        #             "content": follow_up_details_arr[2][str(idx)],
-        #             "message_id": entry["message_id"],
-        #             "threadId": entry["threadId"],
-        #         }
-        #         gmail_reply_message(details)
-        #         service.users().threads().modify(
-        #             userId="me", id=entry["threadId"], body=post_data
-        #         ).execute()
-        #     elif str(idx) in follow_up_details_arr[0] or follow_up_details_arr[1]:
-        #         service.users().threads().modify(
-        #             userId="me", id=entry["threadId"], body=post_data
-        #         ).execute()
-        # print("success")
+        service = authenticate_gmail_api()
+        for idx, entry in enumerate(req_details, start=1):
+            if str(idx) in follow_up_details_arr[2].keys():
+                # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
+                details = {
+                    "master_email": entry["master_email"],
+                    "recepient": entry["recepient"],
+                    "subject": entry["subject"],
+                    "content": follow_up_details_arr[2][str(idx)],
+                    "message_id": entry["message_id"],
+                    "threadId": entry["threadId"],
+                }
+                gmail_reply_message(details)
+                service.users().threads().modify(
+                    userId="me", id=entry["threadId"], body=post_data
+                ).execute()
+            elif str(idx) in follow_up_details_arr[0] or follow_up_details_arr[1]:
+                service.users().threads().modify(
+                    userId="me", id=entry["threadId"], body=post_data
+                ).execute()
+        print("success")
