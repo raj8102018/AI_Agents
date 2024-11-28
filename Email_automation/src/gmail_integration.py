@@ -294,6 +294,13 @@ def find_key_in_dict(data, target_key):
             if result is not None:
                 return result
 
+def clean_and_parse_json(json_string):
+    """function for cleaning and parsing json string with delimiters"""
+    try:
+        cleaned = re.sub(r"```json|```", "", json_string).strip()
+        return json.loads(cleaned)
+    except ValueError:
+        return None
 
 def batch_reply():
     """To respond to the unread emails in batches"""
@@ -315,19 +322,25 @@ def batch_reply():
         }  # Changed "first_entries" to "input"
         # print(first_data_input)
         final_output = parallel_chain.invoke(first_data_input)
-        print(f"final output: {final_output}")
-        print(type(final_output))
+        # cleaned_summaries = re.sub(r"```json|```", "", summaries).strip()
+        first_final_output = None
         if isinstance(final_output, dict):
-            first_final_output = final_output["first_thread"]
+            first_final_output = final_output.get("first_thread")
         elif isinstance(final_output, str):
-            first_final_output = json.loads(final_output["first_thread"])
+            try:
+                first_final_output = json.loads(final_output).get("first_thread")
+            except ValueError:
+                print("Error parsing final_output as JSON.")
         print(f"first_final_output : {first_final_output}")
-        print(type(first_final_output))
+        print(f"first_final_output_type : {type(first_final_output)}")
         if isinstance(first_final_output, dict):
-            first_final_output = final_output["first_thread"]
+            first_final_output = first_final_output.get("followup_suggested")
         elif isinstance(first_final_output, str):
-            first_final_output = json.loads(final_output["first_thread"])
-        print(f"first_final_output: {first_final_output["Follow up Suggested"]}")
+            first_final_output = clean_and_parse_json(first_final_output)
+            if isinstance(first_final_output, str):
+                first_final_output = json.loads(first_final_output)
+        print(type(first_final_output))
+        print(first_final_output)
         print(final_output["second_thread"])
         required_dict = final_output["second_thread"]
         required_dict = json.loads(required_dict)
@@ -346,15 +359,15 @@ def batch_reply():
         print(f"final output dict: {final_output_dict["Follow up Suggested"]}")
 
         follow_up_details = (
-            first_final_output["Follow up Suggested"]
+            first_final_output["followup_suggested"]
             | final_output_dict["Follow up Suggested"]
         )
         scheduled_meet_details = (
-            first_final_output["Meeting Scheduled"]
+            first_final_output["meeting_scheduled"]
             | final_output_dict["Meeting Scheduled"]
         )
         recontact_needed_details = (
-            first_final_output["Recontact Needed"]
+            first_final_output["recontact_needed"]
             | final_output_dict["Recontact Needed"]
         )
         print(follow_up_details)
