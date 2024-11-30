@@ -17,13 +17,14 @@ from Email_automation.src.email_automation_agent import EmailAutomation
 class Orchestrator:
     """This class contains all the methods for orchestrator functionality"""
 
-    def __init__(self):
+    def __init__(self, user_id):
         # Set up database connection
         # Initialize and register agents
         self.agents = {
             "lead_classification": LeadGenerator,
-            "email_automation": EmailAutomation,
+            "email_automation": EmailAutomation
         }
+        self.user_id = user_id
 
     def run(self):
         """This method contains the sequential flow of agent logic"""
@@ -34,21 +35,22 @@ class Orchestrator:
         leads_collection = self.agents["lead_classification"].run(self)
 
         leads = self.agents["lead_classification"].fetch_and_classify(
-            self, leads_collection
+            self, leads_collection, self.user_id
         )
 
         self.agents["lead_classification"].process_and_update(self, leads)
 
         # Step 2: Run Email Automation Agent
-        self.agents["email_automation"].run(self)
+        self.agents["email_automation"].run(self, self.user_id)
 
-        self.agents["email_automation"].initiate_email(self)
+        # print(self.user_id)
+        self.agents["email_automation"].initiate_email(self, self.user_id)
 
-        self.agents["email_automation"].bulk_reply(self)
+        self.agents["email_automation"].bulk_reply(self, self.user_id)
 
         print("Orchestrator finished execution.")
 
 
 if __name__ == "__main__":
-    orchestrator = Orchestrator()
+    orchestrator = Orchestrator("userno1")
     orchestrator.run()

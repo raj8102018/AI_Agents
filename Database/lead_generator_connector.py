@@ -40,6 +40,35 @@ def fetch_leads(leads_collection):
     leads_list = list(leads)
     return leads_list
 
+def fetch_leads_for_user(leads_collection, user_id):
+    """This function contains the logic to fetch leads from database"""
+    leads = leads_collection.find(
+        {
+            "user_id": ObjectId(user_id),
+            "lead_type": {"$exists": False},  # Documents without 'lead_type'
+            "outbound message": {
+                "$exists": False
+            },  # Documents without 'outbound message'
+        }
+    )
+    leads_list = list(leads)
+    print(leads_list)
+    print("printing in fetch leads for user funciton NEW")
+    return leads_list
+
+
+def update_user_with_token(user_id, token):
+
+    database = connect_to_mongodb()
+    users_collection = database["users"]
+
+    result = users_collection.update_one(
+        {"_id": ObjectId(user_id)},  # Filter to match the lead's unique ID
+        {"$set": {"gtoken": token.to_json()}},  # Update the google_token field
+    )
+    return result.raw_result
+
+
 
 def update_leads(batch):
     "This function contains logic to update the leads in the database"
@@ -83,6 +112,14 @@ def update_frequency(user_id,frequency):
         {"$set": {"frequency": int(frequency)}},  # Update the frequency field
     )
     return result.raw_result
+
+def create_leads(leads):
+    database = connect_to_mongodb()
+    leads_collection = database["leads"]
+
+    result = leads_collection.insert_many(leads)
+
+    return result.inserted_ids
 
 def add_new_leads(leads_list,leads_collection):
     """This function contains the logic to add a new lead to the database"""
