@@ -381,19 +381,19 @@ def batch_reply(user_id):
         print("\n\n\n\n\n")
         print(f"final_output_dict - {final_output_dict}")
         print(type(final_output_dict))
-        print(f"final output dict: {final_output_dict["Follow up Suggested"]}")
+        print(f"final output dict: {final_output_dict["followup_suggested"]}")
 
         follow_up_details = (
             first_final_output["followup_suggested"]
-            | final_output_dict["Follow up Suggested"]
+            | final_output_dict["followup_suggested"]
         )
         scheduled_meet_details = (
             first_final_output["meeting_scheduled"]
-            | final_output_dict["Meeting Scheduled"]
+            | final_output_dict["meeting_scheduled"]
         )
         recontact_needed_details = (
             first_final_output["recontact_needed"]
-            | final_output_dict["Recontact Needed"]
+            | final_output_dict["recontact_needed"]
         )
         print(follow_up_details)
         follow_up_details_arr = [
