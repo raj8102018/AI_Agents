@@ -16,7 +16,7 @@ from bson.objectid import ObjectId
 from functools import wraps
 from datetime import datetime, timezone, timedelta, UTC
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request, redirect, url_for, session
+from flask import Flask, jsonify, request, redirect, url_for, session, render_template
 from flask_cors import CORS  # For enabling CORS
 from oauthlib.oauth2 import WebApplicationClient
 from google_auth_oauthlib.flow import Flow
@@ -54,7 +54,14 @@ CLIENT_SECRETS_FILE = "credentials.json"
 REDIRECT_URI = "https://localhost:5000/google_token/callback"
 
 # Initialize Flask app
-app = Flask(__name__)
+# app = Flask(
+#     __name__,
+#     static_url_path="/",
+#     static_folder="/dist/assets",
+#     template_folder="/dist",
+# )
+app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__),  'dist'), static_folder=os.path.join(os.path.dirname(__file__), 'dist', 'assets'), static_url_path='/assets')
+
 CORS(app)
 app.secret_key = secretkey
 
@@ -269,10 +276,11 @@ def sign_up():
     return jsonify({"error": "User already exists!"}), 409
 
 
-@app.route("/", methods=["GET"])
+@app.route("/", methods=['GET'])
 def get_home():
     """default template route handler"""
-    return jsonify({"status": "UNDER CONSTRUCTION"})
+    # return jsonify({"status": "UNDER CONSTRUCTION"})
+    return render_template('index.html')
 
 
 # API Route for signing in (still incomplete)
