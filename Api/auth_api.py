@@ -8,6 +8,10 @@ import sys
 import json
 import requests
 import jwt
+import pandas as pd
+import os
+
+from bson.objectid import ObjectId
 
 from functools import wraps
 from datetime import datetime, timezone, timedelta, UTC
@@ -15,6 +19,9 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request, redirect, url_for, session
 from flask_cors import CORS  # For enabling CORS
 from oauthlib.oauth2 import WebApplicationClient
+from google_auth_oauthlib.flow import Flow
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "src")))
@@ -23,13 +30,28 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from Config.settings import secretkey, clientid_auth, clientsecret_auth #pylint: disable=wrong-import-position
 from Database.auth_database_connector import create_user, get_user_by_email, get_user_by_username, get_user_by_id, verify_password, create_guser # pylint: disable=line-too-long
-from Database.lead_generator_connector import update_frequency
+from Database.lead_generator_connector import update_frequency, create_leads, update_user_with_token
 from Database.rag_connector import store_pdf_in_mongodb
+
+
+from Email_automation.src.email_automation_agent import EmailAutomation
+from Orchestrator.orchestrator import Orchestrator
+
+email_automation_agent_instance = EmailAutomation()
 
 load_dotenv()
 
 # SECRET_KEY = ''.join(random.choice( string.ascii_lowercase  ) for i in range( 32 ))
 SECRET_KEY = 'FCUK'
+os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/gmail.modify",
+    "https://www.googleapis.com/auth/calendar.readonly",
+]
+CLIENT_SECRETS_FILE = "credentials.json"
+REDIRECT_URI = "https://localhost:5000/google_token/callback"
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -65,6 +87,7 @@ def token_required(func):
         expiry_date = datetime.strptime(expiry, format_date)
         if datetime.now(UTC) > expiry_date:
             print("token expired")
+            # return redirect("https://localhost:3001/sign_in", code=302)
             return {"success": False, "msg": "Token Expired"}, 400
         else:
             print("token is valid and time left:")
@@ -208,6 +231,7 @@ def goodle_login():
         user["token"] = token
         session["user"] = email
         user["_id"] = str(user["_id"])
+        print(user)
         return (
             jsonify(user),
             200,
@@ -315,9 +339,16 @@ def sign_in():
 def get_user(user_id):
     """route handler for manual signin"""
 
-    return get_user_by_id(user_id)
+    user = get_user_by_id(user_id)
+    token = jwt.encode({'email': user["email"], 'expire_time': str(datetime.now(UTC) + timedelta(minutes=30))}, SECRET_KEY)
+    user["message"] = "Sign-in successful!"
+    session["token"]= token
+    user["token"]= token
+    user["_id"]     = str(user["_id"])
+    return jsonify(user)
 
 @app.route("/upload_files", methods=["POST"])
+@token_required
 def upload_files():
     try:
         # Check if files are in the request
@@ -333,7 +364,7 @@ def upload_files():
                 excel_file = file
         
         if not pdf_file or not excel_file:
-            return jsonify({"error": "Missing required file(s). PDF and Excel are required."}), 400
+            return jsonify({"error": "Missing required file(s). PDF and CSV are required."}), 400
          
         frequency = request.form.get('frequency')
         user_id = request.form.get('user_id')
@@ -353,9 +384,35 @@ def upload_files():
         # print(f"Excel saved at: {excel_path}")
         print(f"Frequency: {frequency}")
         print(f"User ID: {user_id}")
+
+        df = pd.read_csv(excel_file)
+        print(df)
+
+        leads_to_insert = []
+        for index, row in df.iterrows():
+            print(index)
+            print(row)
+            lead = {
+                "Company": row["Company"],
+                "First Name": row["First Name"],
+                "Last Name": row["Last Name"],
+                "Email": row["Email"],
+                "Job Title": row["Profession"],
+                "Website": row["Website"],
+                "Address": row["Address"],
+                "user_id": ObjectId(user_id),
+                "Initial contact": "No"
+            }
+            leads_to_insert.append(lead)
         
+        create_leads(leads_to_insert)
+        
+
         update_frequency(user_id,frequency)
         store_pdf_in_mongodb(user_id,pdf_file)
+
+
+        
         # Respond to the client
         return jsonify({
             "message": "Files uploaded successfully",
@@ -369,6 +426,69 @@ def upload_files():
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while processing your request"}), 500
 
+@app.route("/execute/", methods=["POST"])
+@token_required
+def run_email_automation():
+    user_id = request.form.get('user_id')
+    orchestrator_instance = Orchestrator(user_id)
+    orchestrator_instance.run()
+
+    # email_automation_agent_instance.run()
+    # email_automation_agent_instance.initiate_email()
+    return {"message": "Successfully Ran EA"}, 200
+
+auth_flows = {}
+state_to_user = {}
+
+@app.route('/get-auth-url/<user_id>', methods=['GET'])
+def get_auth_url(user_id):
+    """Generate the authorization URL and return it to the frontend."""
+    flow = Flow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
+    flow.redirect_uri = REDIRECT_URI
+    
+    # Save the flow instance for later use
+
+    # Generate the authorization URL
+    auth_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true',
+        user_id= user_id
+    )
+
+    auth_flows[state] = flow
+    state_to_user[state] = user_id
+
+    print(state)
+    print("-----State^^^^")
+
+    # Return the URL to the frontend
+    return jsonify({'auth_url': auth_url})
+
+@app.route('/google_token/callback', methods=['GET'])
+def gtoken_callback():
+    """Handle the OAuth callback."""
+    state = request.args.get('state')  # Pass `state` to identify the user
+    code = request.args.get('code') 
+
+    # Retrieve the flow instance using state/user_id
+    flow = auth_flows.pop(state, None)
+    user_id = state_to_user.pop(state, None)
+
+    if not flow:
+        return jsonify({'error': 'Invalid state or user ID'}), 400
+
+    flow.fetch_token(code=code)
+
+    # Save credentials
+    creds = flow.credentials
+    target_token = f"tokens/{user_id}_token.json"
+    os.makedirs(os.path.dirname(target_token), exist_ok=True)
+    with open(target_token, 'w', encoding='utf-8') as token_file:
+        token_file.write(creds.to_json())
+
+    update_result = update_user_with_token(user_id, creds)
+
+    return jsonify({'message': 'Authentication successful, You can close this window.'})
 
 if __name__ == "__main__":
     # app.run(debug=True)
