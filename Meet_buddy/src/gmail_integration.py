@@ -24,7 +24,7 @@ from email_response_generation import get_batches,get_summary,generate_response
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 
-from Database.mongodb_connector import leads_for_initial_contact
+from Database.mongodb_connector import leads_for_initial_contact, get_sender_email
 
 
 
@@ -73,7 +73,7 @@ def gmail_send_message(sender, recepient, subject, content):
         create_message = {"raw": encoded_message}
 
         # Send the email
-        send_message = service.users().messages().send(userId="me", body=create_message).execute()
+        send_message = service.users().messages().send(userId=sender, body=create_message).execute()
         print(f'Message Id: {send_message["id"]}')
     except HttpError as error:
         print(f"An error occurred: {error}")
@@ -101,17 +101,18 @@ def gmail_reply_message(details):
         create_message = {"raw": encoded_message, "threadId": details["threadId"]}  # Thread ID
 
         # Send the email
-        send_message = service.users().messages().send(userId="me", body=create_message).execute()
+        send_message = service.users().messages().send(userId=sender, body=create_message).execute()
         print(f'Message Id: {send_message["id"]}')
     except HttpError as error:
         print(f"An error occurred: {error}")
 
 
-def batch_mail_initiation(batch_size=1):
+def batch_mail_initiation(user_id, batch_size=1):
     """To initiate converstation in batch using the outbound messages stored in MongoDB"""
     authenticate_gmail_api()
     leads_to_contact = leads_for_initial_contact()
     sender = "yuvraj07102024@gmail.com"
+    sender = get_sender_email(user_id)
 
     for i in range(0, len(leads_to_contact), batch_size):
         batch = leads_to_contact[i : i + batch_size]
@@ -162,7 +163,7 @@ def decode_base64(s):
     return utf_msg
 
 
-def show_chatty_threads():
+def show_chatty_threads(user_id):
     """Display threads with long conversations(>= 3 messages)
     Return: None
 
@@ -175,18 +176,18 @@ def show_chatty_threads():
     try:
         # create gmail api client
         service = authenticate_gmail_api()
-
+        sender  = get_sender_email()
         threads = (
             service.users()
             .threads()
-            .list(userId="me", q="is:unread")
+            .list(userId=sender, q="is:unread")
             .execute()
             .get("threads", [])
         )
         lengthy_threads = []
 
         for thread in threads:
-            tdata = service.users().threads().get(userId="me", id=thread["id"]).execute()
+            tdata = service.users().threads().get(userId=sender, id=thread["id"]).execute()
             nmsgs = len(tdata["messages"])
             conversation = []
             only_received_msgs = []
@@ -255,10 +256,10 @@ def show_chatty_threads():
         print(f"An error occurred: {error}")
 
 
-def batch_reply():
+def batch_reply(user_id):
     """To respond to the unread emails in batches"""
     post_data = {"addLabelIds": [], "removeLabelIds": ["UNREAD"]}
-    req_details = show_chatty_threads()
+    req_details = show_chatty_threads(user_id)
     if len(req_details) > 0:
         response_parameters = [
             {
@@ -287,6 +288,7 @@ def batch_reply():
         # dict_followups = follow_up_details_arr[0]
 
         service = authenticate_gmail_api()
+        sender  = get_sender_email()
         for idx, entry in enumerate(req_details, start=1):
             if str(idx) in follow_up_details_arr[2].keys():
                 # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
@@ -298,11 +300,11 @@ def batch_reply():
                     "threadId":entry["threadId"]}
                 gmail_reply_message(details)
                 service.users().threads().modify(
-                    userId="me", id=entry["threadId"], body=post_data
+                    userId=sender, id=entry["threadId"], body=post_data
                 ).execute()
             elif str(idx) in follow_up_details_arr[0] or follow_up_details_arr[1]:
                 service.users().threads().modify(
-                    userId="me", id=entry["threadId"], body=post_data
+                    userId=sender, id=entry["threadId"], body=post_data
                 ).execute()
         print("success")
 

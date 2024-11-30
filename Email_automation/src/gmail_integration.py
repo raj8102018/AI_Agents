@@ -33,7 +33,10 @@ from Database.mongodb_connector import (
     leads_for_initial_contact,
     update_leads,
     connect_to_mongodb,
+    get_sender_email,
+    get_user_gmail_token
 )
+from Database.lead_generator_connector import update_user_with_token
 
 
 # If modifying these scopes, delete the file token.json.
@@ -46,22 +49,37 @@ SCOPES = [
 # SCOPES = ["https://mail.google.com/"]
 
 
-def authenticate_gmail_api():
-    """To authenticate with the gmail api. might open a window for consent during the first run"""
+# def authenticate_gmail_api(user_id):
+#     """To authenticate with the gmail api. might open a window for consent during the first run"""
+#     creds = None
+#     target_token = "tokens/"+user_id+"_token.json"
+#     # Check if token.json exists to load credentials
+#     if os.path.exists(target_token):
+#         creds = Credentials.from_authorized_user_file(target_token, SCOPES)
+#     # If credentials are not valid, perform the authorization flow
+#     if not creds or not creds.valid:
+#         if creds and creds.expired and creds.refresh_token:
+#             creds.refresh(Request())
+#         else:
+#             flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+#             creds = flow.run_local_server(port=0)
+#         # Save the credentials for the next run
+#         with open(target_token, "w", encoding="utf-8") as token:
+#             token.write(creds.to_json())
+#     return build("gmail", "v1", credentials=creds)
+
+
+def authenticate_gmail_api(user_id):
     creds = None
-    # Check if token.json exists to load credentials
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    # If credentials are not valid, perform the authorization flow
-    if not creds or not creds.valid:
+    gtoken = get_user_gmail_token(user_id)
+    creds = Credentials.from_authorized_user_info(gtoken, SCOPES)
+    if not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open("token.json", "w", encoding="utf-8") as token:
-            token.write(creds.to_json())
+            update_user_with_token(user_id, creds)
+        # else:
+        #     blank_out_user_gtoken(user_id)
+    
     return build("gmail", "v1", credentials=creds)
 
 
@@ -82,7 +100,7 @@ def gmail_send_message(sender, recepient, subject, content):
 
         # Send the email
         send_message = (
-            service.users().messages().send(userId="me", body=create_message).execute()
+            service.users().messages().send(userId=sender, body=create_message).execute()
         )
         print(f'Message Id: {send_message["id"]}')
     except HttpError as error:
@@ -115,20 +133,24 @@ def gmail_reply_message(details):
 
         # Send the email
         send_message = (
-            service.users().messages().send(userId="me", body=create_message).execute()
+            service.users().messages().send(userId=details["master_email"], body=create_message).execute()
         )
         print(f'Message Id: {send_message["id"]}')
     except HttpError as error:
         print(f"An error occurred: {error}")
 
 
-def batch_mail_initiation(batch_size=1):
+def batch_mail_initiation(user_id, batch_size=1):
     """To initiate converstation in batch using the outbound messages stored in MongoDB"""
-    authenticate_gmail_api()
+    authenticate_gmail_api(user_id)
     leads_collection = connect_to_mongodb()
     leads_data_tuple = leads_for_initial_contact(leads_collection)
     leads_to_contact = leads_data_tuple[0]
+    
     sender = "yuvraj07102024@gmail.com"
+    sender = get_sender_email(user_id)
+    print("Sender: ")
+    print(sender)
 
     for i in range(0, len(leads_to_contact), batch_size):
         batch = leads_to_contact[i : i + batch_size]
@@ -157,6 +179,7 @@ def extract_emails_regex(content):
     return responses
 
 
+
 def generate_batch_response_for_bulk_reply(response_parameters):
     """To genenrate follow up messages for a batch of emails for replying in bulk"""
     batch = get_batches(response_parameters)
@@ -181,7 +204,7 @@ def decode_base64(s):
     return utf_msg
 
 
-def show_chatty_threads():
+def show_chatty_threads(user_id):
     """Display threads with long conversations(>= 3 messages)
     Return: None
 
@@ -193,12 +216,14 @@ def show_chatty_threads():
 
     try:
         # create gmail api client
-        service = authenticate_gmail_api()
-
+        service = authenticate_gmail_api(user_id)
+        sender = get_sender_email(user_id)
+        print(sender)
+        print("sender from the chatty threads")
         threads = (
             service.users()
             .threads()
-            .list(userId="me", q="is:unread")
+            .list(userId=sender, q="is:unread")
             .execute()
             .get("threads", [])
         )
@@ -206,7 +231,7 @@ def show_chatty_threads():
 
         for thread in threads:
             tdata = (
-                service.users().threads().get(userId="me", id=thread["id"]).execute()
+                service.users().threads().get(userId=sender, id=thread["id"]).execute()
             )
             nmsgs = len(tdata["messages"])
             conversation = []
@@ -302,10 +327,10 @@ def clean_and_parse_json(json_string):
     except ValueError:
         return None
 
-def batch_reply():
+def batch_reply(user_id):
     """To respond to the unread emails in batches"""
     post_data = {"addLabelIds": [], "removeLabelIds": ["UNREAD"]}
-    req_details = show_chatty_threads()
+    req_details = show_chatty_threads(user_id)
     if len(req_details) > 0:
         response_parameters = [
             {
@@ -378,6 +403,7 @@ def batch_reply():
         ]
 
         service = authenticate_gmail_api()
+        sender = get_sender_email(user_id)
         for idx, entry in enumerate(req_details, start=1):
             if str(idx) in follow_up_details_arr[2].keys():
                 # gmail_reply_message(sender,recepient,subject,content,message_id,thread_id):
@@ -391,10 +417,10 @@ def batch_reply():
                 }
                 gmail_reply_message(details)
                 service.users().threads().modify(
-                    userId="me", id=entry["threadId"], body=post_data
+                    userId=sender, id=entry["threadId"], body=post_data
                 ).execute()
             elif str(idx) in follow_up_details_arr[0] or follow_up_details_arr[1]:
                 service.users().threads().modify(
-                    userId="me", id=entry["threadId"], body=post_data
+                    userId=sender, id=entry["threadId"], body=post_data
                 ).execute()
         print("success")

@@ -56,7 +56,7 @@ def gmail_send_message(sender, recepient, subject, content):
 
         # Send the email
         send_message = (
-            service.users().messages().send(userId="me", body=create_message).execute()
+            service.users().messages().send(userId=sender, body=create_message).execute()
         )
         print(f'Message Id: {send_message["id"]}')
     except HttpError as error:

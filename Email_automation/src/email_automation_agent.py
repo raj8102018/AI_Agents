@@ -13,17 +13,18 @@ class EmailAutomation:
     def __init__(self):
         pass
 
-    def run(self):
+    def run(self, user_id):
         """This function starts the agent"""
-        authenticate_gmail_api()
+        authenticate_gmail_api(user_id)
         print("Running Email Automation Agent...")
 
-    def initiate_email(self):
+    def initiate_email(self, user_id):
         """This method calls the function that initiates the conversation"""
         print("Sending initial emails")
-        batch_mail_initiation()
+        print(user_id)
+        batch_mail_initiation(user_id)
 
-    def bulk_reply(self):
+    def bulk_reply(self, user_id):
         """this methods calls the function that sends a batch of replies"""
         print("segregating mails and responding")
-        batch_reply()
+        batch_reply(user_id)

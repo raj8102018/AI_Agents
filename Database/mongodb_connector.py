@@ -3,8 +3,10 @@
 import sys
 import os
 import re
+import json
 from pymongo import MongoClient
 from pymongo import UpdateOne
+from bson.objectid import ObjectId
 
 
 # Add the parent directory to the Python path to access 'config'
@@ -28,6 +30,31 @@ def connect_to_mongodb():
     return leads_collection
     # return "connect successful"
 
+def get_sender_email(user_id):
+    client = MongoClient(MONGODB_URI)
+
+    # Access the specific database
+    db = client[MONGODB_DB]
+
+    # Access the 'leads' collection
+    users_collection = db['users']
+    
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+
+    return user["email"]
+
+def get_user_gmail_token(user_id):
+    client = MongoClient(MONGODB_URI)
+
+    # Access the specific database
+    db = client[MONGODB_DB]
+
+    # Access the 'leads' collection
+    users_collection = db['users']
+    
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+
+    return json.loads(user.get("gtoken")) 
 
 def fetch_leads(leads_collection):
     """This function fetches the leads"""
