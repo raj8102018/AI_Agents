@@ -10,8 +10,8 @@ def lead_classification_update(leads):
     Classify the lead type based on job title and industry
     """
     for lead in leads:
-        job_title = lead['Job Title']
-        industry = lead['Industry']
+        # job_title = lead['Job Title']
+        # industry = lead['Industry']
         # lead_type = predict_lead(job_title, industry)
         lead_type = "hot"
         lead['lead_type'] = lead_type

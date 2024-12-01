@@ -140,11 +140,11 @@ def gmail_reply_message(user_id, details):
         print(f"An error occurred: {error}")
 
 
-def batch_mail_initiation(user_id, batch_size=1):
+def  batch_mail_initiation(user_id, batch_size=1):
     """To initiate converstation in batch using the outbound messages stored in MongoDB"""
     authenticate_gmail_api(user_id)
     leads_collection = connect_to_mongodb()
-    leads_data_tuple = leads_for_initial_contact(leads_collection)
+    leads_data_tuple = leads_for_initial_contact(user_id, leads_collection)
     leads_to_contact = leads_data_tuple[0]
     
     # sender = "yuvraj07102024@gmail.com"
@@ -290,6 +290,7 @@ def show_chatty_threads(user_id):
                                 only_received_msgs.append(conversation[-1])
                 thread["conversation"] = conversation
                 thread["only_received_msgs"] = only_received_msgs
+                thread["master_email"] = sender
 
                 if not is_last_msg_sent:
                     lengthy_threads.append(thread)
