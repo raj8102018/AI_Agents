@@ -30,7 +30,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from Config.settings import secretkey, clientid_auth, clientsecret_auth #pylint: disable=wrong-import-position
 from Database.auth_database_connector import create_user, get_user_by_email, get_user_by_username, get_user_by_id, verify_password, create_guser # pylint: disable=line-too-long
-from Database.lead_generator_connector import update_frequency, create_leads, update_user_with_token
+from Database.lead_generator_connector import update_lead_with_form_data, create_leads, update_user_with_token
 from Database.rag_connector import store_pdf_in_mongodb
 
 
@@ -175,7 +175,7 @@ def callback():
         # Log the user in (you can set session variables, etc.)
         
         
-        token = jwt.encode({'email': user["email"], 'expire_time': str(datetime.now(UTC) + timedelta(minutes=30))}, SECRET_KEY)
+        token = jwt.encode({'email': user["email"], 'expire_time': str(datetime.now(UTC) + timedelta(minutes=300))}, SECRET_KEY)
         user["token"] = token
         session["user"] = email
         user["_id"] = str(user["_id"])
@@ -368,9 +368,11 @@ def upload_files():
          
         frequency = request.form.get('frequency')
         user_id = request.form.get('user_id')
+        company_name = request.form.get('company_name')
+        agent_name = request.form.get('agent_name')
 
         # Validate form fields
-        if not frequency or not user_id:
+        if not frequency or not user_id or not company_name or not agent_name:
             return jsonify({"error": "Missing form data"}), 400
 
         # Save the uploaded files
@@ -384,6 +386,8 @@ def upload_files():
         # print(f"Excel saved at: {excel_path}")
         print(f"Frequency: {frequency}")
         print(f"User ID: {user_id}")
+        print(f"company name: {company_name}")
+        print(f"agent_name: {agent_name}")
 
         df = pd.read_csv(excel_file)
         print(df)
@@ -408,7 +412,7 @@ def upload_files():
         create_leads(leads_to_insert)
         
 
-        update_frequency(user_id,frequency)
+        update_lead_with_form_data(user_id,frequency,company_name,agent_name)
         store_pdf_in_mongodb(user_id,pdf_file)
 
 
