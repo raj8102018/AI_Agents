@@ -73,7 +73,7 @@ postquery_refinement_chain = LLMChain(llm=llm, prompt=postquery_refinement_promp
 def get_query_answer(formatted_query):
     "get answer from document for the query"
     print("fetching answers")
-    url = "http://127.0.0.1:9090/api/answer"
+    url = "http://3.110.171.136:9090/api/answer"
     parsed_query = json.loads(formatted_query)
     print(parsed_query)
     questions = parsed_query["questions"]

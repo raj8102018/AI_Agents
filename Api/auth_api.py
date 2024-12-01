@@ -51,7 +51,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/calendar.readonly",
 ]
 CLIENT_SECRETS_FILE = "credentials.json"
-REDIRECT_URI = "https://localhost:5000/google_token/callback"
+REDIRECT_URI = "https://qstate.in/google_token/callback"
 
 # Initialize Flask app
 # app = Flask(
@@ -507,5 +507,5 @@ def gtoken_callback():
 if __name__ == "__main__":
     # app.run(debug=True)
     
-    app.run(ssl_context=('example.com+5.pem', 'example.com+5-key.pem'), debug=True)
+    app.run(host='0.0.0.0', ssl_context=('example.com+5.pem', 'example.com+5-key.pem'), debug=True)
     # app.run(ssl_context="adhoc", debug=True)
