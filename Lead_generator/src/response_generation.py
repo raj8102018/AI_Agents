@@ -44,8 +44,9 @@ def generate_response(batch):
 			f"Job Title: {lead['Job Title']}\n"
 			f"Industry: {lead['Industry']}\n\n"
 		)
-
-    prompt = formatted_batch + outbound_prompt
+    executive_name = "mpulelo mbangwa"
+    company_name = "essar industries"
+    prompt = formatted_batch + outbound_prompt.format(executive_name = executive_name,company_name = company_name)
 
     try:
         # Configure the API key

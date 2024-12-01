@@ -83,10 +83,10 @@ def authenticate_gmail_api(user_id):
     return build("gmail", "v1", credentials=creds)
 
 
-def gmail_send_message(sender, recepient, subject, content):
+def gmail_send_message(user_id, sender, recepient, subject, content):
     """Create and send an email message and print the returned message ID."""
     try:
-        service = authenticate_gmail_api()
+        service = authenticate_gmail_api(user_id)
         message = EmailMessage()
         content = content.replace("\\n", "\n").replace("\n", "\n")
         message.set_content(content)
@@ -107,10 +107,10 @@ def gmail_send_message(sender, recepient, subject, content):
         print(f"An error occurred: {error}")
 
 
-def gmail_reply_message(details):
+def gmail_reply_message(user_id, details):
     """reply to an email message and print the returned message ID."""
     try:
-        service = authenticate_gmail_api()
+        service = authenticate_gmail_api(user_id)
         message = EmailMessage()
         content = details["content"].replace("\\n", "\n").replace("\n", "\n")
         message.set_content(content)
@@ -147,7 +147,7 @@ def batch_mail_initiation(user_id, batch_size=1):
     leads_data_tuple = leads_for_initial_contact(leads_collection)
     leads_to_contact = leads_data_tuple[0]
     
-    sender = "yuvraj07102024@gmail.com"
+    # sender = "yuvraj07102024@gmail.com"
     sender = get_sender_email(user_id)
     print("Sender: ")
     print(sender)
@@ -157,7 +157,7 @@ def batch_mail_initiation(user_id, batch_size=1):
         # gmail_send_message(sender,recepient,subject,content):
         for entry in batch:
             gmail_send_message(
-                sender, entry["recepient"], entry["subject"], entry["content"]
+                user_id,sender, entry["recepient"], entry["subject"], entry["content"]
             )
             print("sent..." + str(len(batch)))
         time.sleep(5)
@@ -327,7 +327,7 @@ def clean_and_parse_json(json_string):
     except ValueError:
         return None
 
-def batch_reply(user_id):
+def batch_reply(user_id,company_name):
     """To respond to the unread emails in batches"""
     post_data = {"addLabelIds": [], "removeLabelIds": ["UNREAD"]}
     req_details = show_chatty_threads(user_id)
@@ -341,9 +341,11 @@ def batch_reply(user_id):
             for entry in req_details
         ]
         batch = get_batches(response_parameters)
-
+        executive_name = "mpulelo mbangwa"
         first_data_input = {
-            "input": json.dumps(batch)
+            "input": json.dumps(batch),
+            "executive_name": executive_name,
+            "company_name": company_name
         }  # Changed "first_entries" to "input"
         # print(first_data_input)
         final_output = parallel_chain.invoke(first_data_input)
@@ -370,7 +372,9 @@ def batch_reply(user_id):
         required_dict = final_output["second_thread"]
         required_dict = json.loads(required_dict)
         required_questions = str(required_dict["questions"])
-        output = get_query_answer.invoke(required_questions)
+        formatted_query = json.dumps({"questions": required_questions, "company": company_name})
+        print(formatted_query)
+        output = get_query_answer.invoke(formatted_query)
         print(output)
         print(type(output))
         required_dict["answers"] = find_key_in_dict(output,'output_text')
@@ -402,7 +406,7 @@ def batch_reply(user_id):
             follow_up_details,
         ]
 
-        service = authenticate_gmail_api()
+        service = authenticate_gmail_api(user_id)
         sender = get_sender_email(user_id)
         for idx, entry in enumerate(req_details, start=1):
             if str(idx) in follow_up_details_arr[2].keys():
@@ -415,7 +419,7 @@ def batch_reply(user_id):
                     "message_id": entry["message_id"],
                     "threadId": entry["threadId"],
                 }
-                gmail_reply_message(details)
+                gmail_reply_message(user_id,details)
                 service.users().threads().modify(
                     userId=sender, id=entry["threadId"], body=post_data
                 ).execute()
