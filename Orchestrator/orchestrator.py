@@ -38,6 +38,7 @@ class Orchestrator:
         leads = self.agents["lead_classification"].fetch_and_classify(
             self, leads_collection, self.user_id
         )
+        print(leads)
 
         self.agents["lead_classification"].process_and_update(self, leads)
 

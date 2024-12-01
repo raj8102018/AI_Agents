@@ -31,7 +31,7 @@ def get_batches(data, batch_size=10):
 # Load environment variables from .env file
 load_dotenv()
 
-def generate_response(batch):
+def generate_response(batch, executive_name, company_name):
     """This function makes the api call and formats the response into the required format"""
     # Format the batch into readable text for the prompt
     batch_len = len(batch)
@@ -41,11 +41,9 @@ def generate_response(batch):
 			f"Lead {idx + 1}:\n"
 			f"Company: {lead['Company']}\n"
 			f"Executive: {lead['First Name']} {lead['Last Name']}\n"
-			f"Job Title: {lead['Job Title']}\n"
+			f"Job Title: {lead['Job Title']}\n" 
 			f"Industry: {lead['Industry']}\n\n"
 		)
-    executive_name = "mpulelo mbangwa"
-    company_name = "essar industries"
     prompt = formatted_batch + outbound_prompt.format(executive_name = executive_name,company_name = company_name)
 
     try:
@@ -97,11 +95,11 @@ def generate_response(batch):
 
 
 # loop through each batch and update the leads
-def batch_processing(batches_to_process):
+def batch_processing(batches_to_process,executive_name, company_name):
     """This function processes the batches in time intervals"""
     print("batch_processing started")
     for batch in batches_to_process:
         print("going into generate_response")
-        batch = generate_response(batch)
+        batch = generate_response(batch,executive_name, company_name)
         time.sleep(10)
     return batches_to_process

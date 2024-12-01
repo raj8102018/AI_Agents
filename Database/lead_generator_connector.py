@@ -56,6 +56,17 @@ def fetch_leads_for_user(leads_collection, user_id):
     print("printing in fetch leads for user funciton NEW")
     return leads_list
 
+def fetch_agent_and_company_name(user_id):
+    """This function contains the logic to fetch agent and company names from database"""
+    database = connect_to_mongodb()
+    users_collection = database["users"]
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+    company_name = user["company_name"]
+    agent_name = user["agent_name"]   
+    print("fetching executive and company details")
+    details = {"company_name": company_name, "agent_name": agent_name}
+    return details
+
 
 def update_user_with_token(user_id, token):
 
@@ -101,7 +112,7 @@ def update_leads(batch):
 
     return result  # Return the result of the bulk write operation
 
-def update_frequency(user_id,frequency):
+def update_lead_with_form_data(user_id,frequency,company_name,agent_name):
     "This function contains logic to update the frequency in the database"
     database = connect_to_mongodb()
     user_collection = database["users"]
@@ -109,7 +120,7 @@ def update_frequency(user_id,frequency):
     # Perform the update operation
     result = user_collection.update_one(
         {"_id": ObjectId(user_id)},  # Filter to match the lead's unique ID
-        {"$set": {"frequency": int(frequency)}},  # Update the frequency field
+        {"$set": {"frequency": int(frequency), "company_name": str(company_name), "agent_name": str(agent_name)}},  # Update the frequency field
     )
     return result.raw_result
 
