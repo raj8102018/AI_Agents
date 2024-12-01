@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # MongoDB settings
-MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/')
+MONGODB_URI = os.getenv('MONGODB_URI')
 MONGODB_DB = 'test_emails_responses'
 
 # API Keys (if needed)
