@@ -33,10 +33,10 @@ class LeadGenerator:
         leads = lead_classification_update(leads_list)
         return leads
     
-    def process_and_update(self, info, user_id):
+    def process_and_update(self, leads, user_id):
         """Contains the method that makes api calls and fetches custom responses"""
         print("processing lead data and crafting custom messages...")
-        batches = get_batches(info)
+        batches = get_batches(leads)
         print("get batches info working")
         print(f"batches:{batches}")
         user_details = fetch_agent_and_company_name(user_id)
@@ -48,3 +48,4 @@ class LeadGenerator:
         print("updating the database with custom responses")
         update_leads(merged_list)
         print("Successfully updated")
+

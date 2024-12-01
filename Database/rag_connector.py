@@ -18,8 +18,18 @@ def store_pdf_in_mongodb(user_id,pdf_file):
     pdf_bytes = pdf_file.read()
     database = connect_to_mongodb()
     pdf_collection = database["ragfiles"]
-    pdf_collection.update_one({"file_name": pdf_file.name, "pdf_data": pdf_bytes,"user_id": ObjectId(user_id)})
-    print(f"PDF {pdf_file.name} stored in MongoDB.")
+    document = {
+        "file_name": pdf_file.name,
+        "pdf_data": pdf_bytes,
+        "user_id": ObjectId(user_id),  # Ensure user_id is a valid ObjectId
+    }
+
+    # Use update_one with an upsert option to avoid duplicates
+    pdf_collection.update_one(
+        {"file_name": pdf_file.name, "user_id": ObjectId(user_id)},  # Query to match
+        {"$set": document},  # Update or insert the document
+        upsert=True  # Insert if no document matches the query
+    )
     # Logic to handle file input, PDF text extraction, and conversational chain processing
     # pdf_name = "part_b.pdf"  # Modify to handle file input from your backend
 

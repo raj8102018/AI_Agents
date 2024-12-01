@@ -56,11 +56,12 @@ def get_user_gmail_token(user_id):
 
     return json.loads(user.get("gtoken")) 
 
-def fetch_leads(leads_collection):
+def fetch_leads(user_id, leads_collection):
     """This function fetches the leads"""
     # try:
     # Fetch documents where 'initial_contact' is 'No'
     leads = leads_collection.find({
+        "user_id": ObjectId(user_id),
         "Initial contact": {"$in": ["No", "no"]},
     })
     leads_list = list(leads)  # Caution: consider cursor iteration if too many leads
@@ -69,9 +70,9 @@ def fetch_leads(leads_collection):
     #     print(f"Error fetching leads: {e}")
     #     return []
 
-def leads_for_initial_contact(leads_collection):
+def leads_for_initial_contact(user_id, leads_collection):
     """this function filters the leads that are yet to be contacted"""
-    leads_list = fetch_leads(leads_collection)
+    leads_list = fetch_leads(user_id, leads_collection)
     subject_regex = r"(?<=[sS]ubject:\s)(.*?)(?=\n\n)"
     # messagebody_regex = r"(?<=\n\n)(.*)"
     mail_batch_initial = []

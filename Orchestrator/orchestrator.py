@@ -40,7 +40,7 @@ class Orchestrator:
         )
         print(leads)
 
-        self.agents["lead_classification"].process_and_update(self, leads)
+        self.agents["lead_classification"].process_and_update(self, leads, self.user_id)
 
         # Step 2: Run Email Automation Agent
         self.agents["email_automation"].run(self, self.user_id)
@@ -53,6 +53,6 @@ class Orchestrator:
         print("Orchestrator finished execution.")
 
 
-if __name__ == "__main__":
-    orchestrator = Orchestrator("67456a9246b3ff5be3ccc541","QState")
-    orchestrator.run()
+# if __name__ == "__main__":
+#     orchestrator = Orchestrator("67456a9246b3ff5be3ccc541","QState")
+#     orchestrator.run()

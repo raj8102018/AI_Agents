@@ -413,6 +413,7 @@ def upload_files():
                 "Website": row["Website"],
                 "Address": row["Address"],
                 "user_id": ObjectId(user_id),
+                "Industry": row["Industry"],
                 "Initial contact": "No"
             }
             leads_to_insert.append(lead)
@@ -442,7 +443,8 @@ def upload_files():
 @token_required
 def run_email_automation():
     user_id = request.form.get('user_id')
-    orchestrator_instance = Orchestrator(user_id)
+    company_name = request.form.get('company_name')
+    orchestrator_instance = Orchestrator(user_id,company_name)
     orchestrator_instance.run()
 
     # email_automation_agent_instance.run()
