@@ -8,6 +8,7 @@ This module contains the functionality for Langchain framework related usage
 
 import warnings
 import os
+import json
 from dotenv import load_dotenv
 import requests
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -35,6 +36,8 @@ llm = ChatGoogleGenerativeAI(
 )
 
 # Define the first prompt template
+executive_name = "mpulelo mbangwa"
+company_name = "essar industries"
 first_prompt = PromptTemplate.from_template(first_prompt)
 
 refinement_prompt = PromptTemplate.from_template(refinement_prompt)
@@ -67,10 +70,14 @@ postquery_refinement_chain = LLMChain(llm=llm, prompt=postquery_refinement_promp
 
 
 @chain
-def get_query_answer(questions, company="QState"):
+def get_query_answer(formatted_query):
     "get answer from document for the query"
     print("fetching answers")
     url = "http://127.0.0.1:9090/api/answer"
+    parsed_query = json.loads(formatted_query)
+    print(parsed_query)
+    questions = parsed_query["questions"]
+    company = parsed_query["company"]
     data = {"question": questions, "file_name": f"{company}.pdf"}
 
     response = requests.post(url, json=data)
