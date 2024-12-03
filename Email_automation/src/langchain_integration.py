@@ -25,6 +25,7 @@ load_dotenv()
 
 # Get the Google API key from environment variables
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+RAG_APP_DOMAIN_PATH = os.getenv("RAG_APP_DOMAIN_PATH")
 
 # Check if the API key is set
 if not GOOGLE_API_KEY:
@@ -73,7 +74,7 @@ postquery_refinement_chain = LLMChain(llm=llm, prompt=postquery_refinement_promp
 def get_query_answer(formatted_query):
     "get answer from document for the query"
     print("fetching answers")
-    url = "http://3.110.171.136:9090/api/answer"
+    url = RAG_APP_DOMAIN_PATH
     parsed_query = json.loads(formatted_query)
     print(parsed_query)
     questions = parsed_query["questions"]
