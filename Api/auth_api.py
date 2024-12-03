@@ -44,7 +44,7 @@ load_dotenv()
 # SECRET_KEY = ''.join(random.choice( string.ascii_lowercase  ) for i in range( 32 ))
 SECRET_KEY = 'FCUK'
 mode = os.getenv('MODE')
-domain_name = os.getenv('')
+domain_name = os.getenv('QSTATE_DOMAIN')
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
@@ -57,7 +57,7 @@ CLIENT_SECRETS_FILE = "credentials.json"
 REDIRECT_URI = "https://localhost:5000/google_token/callback"
 
 if mode=="PRODUCTION":
-    REDIRECT_URI = QSTATE_DOMAIN+"/google_token/callback"
+    REDIRECT_URI = domain_name+"/google_token/callback"
 
 # Initialize Flask app
 # app = Flask(
