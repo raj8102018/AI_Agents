@@ -1,13 +1,16 @@
 """
-This module is to make api calls, fetch responses and conduct batch processing
+This module is to make API calls, fetch responses, and conduct batch processing.
 """
-import sys
+import sys     
+import dspy
 import os
+import openai
 import time
 from dotenv import load_dotenv
-import google.generativeai as genai
+load_dotenv()
+
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException # pylint: disable=redefined-builtin
-from .lead_generator_prompts import outbound_prompt
+# from .lead_generator_prompts import outbound_prompt
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "src")))
 
@@ -25,81 +28,72 @@ def get_batches(data, batch_size=10):
 
     return batches
 
+api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = api_key
+lm = dspy.LM('openai/gpt-4o-mini', api_key=api_key)
+dspy.configure(lm=lm)
 
-# from config.settings import GOOGLE_API_KEY
+def format_prompt(leads, executive_name, company_name):
+    batch_len = len(leads)
+    formatted_leads = f"You are given a batch of {batch_len} leads as follows:\n"
+    
+    for idx, lead in enumerate(leads):
+        formatted_leads += (
+            f"Lead {idx + 1}:\n"
+            f"Company: {lead['Company']}\n"
+            f"Executive: {lead['First Name']} {lead['Last Name']}\n"
+            f"Job Title: {lead['Job Title']}\n"
+            f"Industry: {lead['Industry']}\n\n"
+        )
 
-# Load environment variables from .env file
-load_dotenv()
+    outbound_message_template = f"""
+    For each lead, generate a **complete outbound email** in a professional format. Each email must include:
+    - A **subject line** specific to the lead's company and industry.
+    - A personalized **greeting** using the lead's name.
+    - A detailed **message body** introducing yourself as {executive_name} from {company_name}. Mention your company's focus on AI integration solutions to streamline business processes and highlight how these solutions can provide value to the lead's company, role, and industry.
+    - A polite **closing** and your professional **email signature**.
 
-def generate_response(batch, executive_name, company_name):
-    """This function makes the api call and formats the response into the required format"""
-    # Format the batch into readable text for the prompt
-    batch_len = len(batch)
-    formatted_batch = f"you are given a batch of {batch_len} leads as follows :"
-    for idx, lead in enumerate(batch):
-        formatted_batch += (
-			f"Lead {idx + 1}:\n"
-			f"Company: {lead['Company']}\n"
-			f"Executive: {lead['First Name']} {lead['Last Name']}\n"
-			f"Job Title: {lead['Job Title']}\n" 
-			f"Industry: {lead['Industry']}\n\n"
-		)
-    prompt = formatted_batch + outbound_prompt.format(executive_name = executive_name,company_name = company_name)
-
-    try:
-        # Configure the API key
-        genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
-
-        # Initialize the model
-        model = genai.GenerativeModel("gemini-1.5-flash")
-
-        # Make your first request to generate text
-        response = model.generate_content(prompt)
-        print('-----------------')
-        print(response.text)
-        print('-----------------')
-
-        if not response.text:
-            raise ValueError("The model response is empty.")
-        
-        generated_content = response.text.split("Lead")
-        if len(generated_content) == 1:
-            generated_content.insert(0, "**")
-        if len(generated_content[1:]) != len(batch):
-            raise ValueError("Mismatch between generated messages and leads.")
-        # raise ValueError("No Mismatch between generated messages and leads.")
-        for idx, message in enumerate(generated_content[1:], start=0):
-            batch[idx]["outbound message"] = "Lead" + message.replace('**', '').strip()
-
-        # Assign default message for any leads without an outbound message
-        for lead in batch:
-            if "outbound message" not in lead:
-                lead["outbound message"] = "No outbound message generated."
-
-        # for idx, message in enumerate(
-        #     generated_content[1:], start=0
-        # ):  # Skipping the empty first split
-        #     batch[idx]["outbound message"] = "Lead" + message.replace('**','').strip()
-        return batch
-
-    except HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
-    except ConnectionError as conn_err:
-        print(f"Connection error occurred: {conn_err}")
-    except Timeout as timeout_err:
-        print(f"Timeout error occurred: {timeout_err}")
-    except RequestException as req_err:
-        print(f"An error occurred: {req_err}")
-    except KeyError as key_err: # pylint: disable=unused-variable
-        print("API key not found. Make sure it's set correctly in the environment variables.")
+    Respond with the emails directly, with no placeholders or additional instructions.
+    """
+    return formatted_leads + outbound_message_template
 
 
-# loop through each batch and update the leads
+class OutboundEmailSignature(dspy.Signature):
+    """Generate complete outbound emails for leads."""
+    
+    leads: list[dict] = dspy.InputField(desc="List of lead dictionaries containing details such as Company, Executive, Job Title, and Industry.")
+    executive_name: str = dspy.InputField(desc="Your name as the sales executive.")
+    company_name: str = dspy.InputField(desc="Your company's name.")
+    emails: list[str] = dspy.OutputField(desc="Generated emails with subject, body, and signature without designation.")
+
+
+generate_emails = dspy.ChainOfThought(OutboundEmailSignature)
+
 def batch_processing(batches_to_process,executive_name, company_name):
     """This function processes the batches in time intervals"""
     print("batch_processing started")
     for batch in batches_to_process:
         print("going into generate_response")
-        batch = generate_response(batch,executive_name, company_name)
+        print(batch)
+        print('\n')
+        batch_response = generate_emails(leads=batch, executive_name=executive_name, company_name=company_name).emails
+        for i in range(0, len(batch)):
+            batch[i]["outbound message"]= batch_response[i]
         time.sleep(10)
     return batches_to_process
+
+
+if __name__ == "__main__":
+    
+    batches = [[
+        {'Company': 'Sonic Solutions', 'First Name': 'Rajendra', 'Last Name': 'P', 'Job Title': 'Director', 'Industry': 'Motor Racing'},
+        {'Company': 'hedgehog Solutions', 'First Name': 'Prasad', 'Last Name': 'K', 'Job Title': 'Chief Executive Officer', 'Industry': 'Pullaice'}
+    ]]
+
+    executive_name = "Alice Johnson"
+    company_name = "Acme Corp"
+
+    response_list = batch_processing(batches, executive_name, company_name)
+    print('\n\n\n\n') 
+    print(response_list)
+    
