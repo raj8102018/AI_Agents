@@ -452,6 +452,7 @@ def run_email_automation():
     company_name = request.form.get('company_name')
     orchestrator_instance = Orchestrator(user_id,company_name)
     orchestrator_instance.run()
+    del orchestrator_instance
 
     # email_automation_agent_instance.run()
     # email_automation_agent_instance.initiate_email()

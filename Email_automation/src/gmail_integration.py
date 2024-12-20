@@ -373,7 +373,7 @@ def batch_reply(user_id,company_name):
         required_dict = final_output["second_thread"]
         required_dict = json.loads(required_dict)
         required_questions = str(required_dict["questions"])
-        formatted_query = json.dumps({"questions": required_questions, "company": company_name})
+        formatted_query = json.dumps({"questions": required_questions, "file_name": company_name})
         print(formatted_query)
         output = get_query_answer.invoke(formatted_query)
         print(output)
